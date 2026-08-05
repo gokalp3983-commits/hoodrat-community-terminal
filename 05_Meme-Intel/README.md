@@ -35,3 +35,8 @@ The first transfer scan is intentionally bounded to 30 pages or 120 seconds. It 
 ## Responsiveness and status fixes
 
 Commands that may require network or processing time immediately display a `[ PROCESSING ]` notice and remove it when the result or error is printed. The cache-status endpoint uses the same string keys as the activity cache, so completed 12-hour and 24-hour reports correctly appear as `READY`.
+
+
+## Cache-state priority fix
+
+The status endpoint now prioritizes usable cached data over an in-progress background refresh. If a holder, transfer, market, 12-hour, or 24-hour snapshot is already available, `status` reports `READY` even while a newer snapshot is being refreshed. Commands that may take noticeable time immediately display a `[ PROCESSING ]` notice.

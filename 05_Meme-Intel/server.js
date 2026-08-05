@@ -1444,25 +1444,60 @@ async function whalePayload(limit = 100) {
 
 
 app.get("/api/cache-status", (_req, res) => {
-  const state = (ready, building) => ready ? "READY" : building ? "BUILDING" : "EMPTY";
+  // Cached results always take priority over an in-progress refresh. This avoids
+  // reporting BUILDING while a command can already serve a usable snapshot.
+  const cacheState = ({ ready, building, error = null }) => {
+    if (ready) return "READY";
+    if (building) return "BUILDING";
+    if (error) return "ERROR";
+    return "EMPTY";
+  };
+
+  const activity12Ready = activityCache.has("12") && Boolean(activityCache.get("12"));
+  const activity24Ready = activityCache.has("24") && Boolean(activityCache.get("24"));
+  const holderReady = Boolean(
+    (topHolderCache?.holders?.length || 0) > 0 ||
+    (fullHolderCache?.holders?.length || 0) > 0 ||
+    (currentSnapshot?.map?.size || 0) > 0
+  );
+  const transferReady = Boolean(
+    transferCache &&
+    (Array.isArray(transferCache.items)
+      ? transferCache.items.length >= 0
+      : Array.isArray(transferCache.transfers)
+        ? transferCache.transfers.length >= 0
+        : true)
+  );
+
   res.json({
     activity12: {
-      state: state(activityCache.has("12"), activityRefreshes.has("12") || Boolean(activityRefreshAllPromise)),
+      state: cacheState({
+        ready: activity12Ready,
+        building: activityRefreshes.has("12") || Boolean(activityRefreshAllPromise),
+      }),
+      refreshing: activity12Ready && (activityRefreshes.has("12") || Boolean(activityRefreshAllPromise)),
     },
     activity24: {
-      state: state(activityCache.has("24"), activityRefreshes.has("24") || Boolean(activityRefreshAllPromise)),
+      state: cacheState({
+        ready: activity24Ready,
+        building: activityRefreshes.has("24") || Boolean(activityRefreshAllPromise),
+      }),
+      refreshing: activity24Ready && (activityRefreshes.has("24") || Boolean(activityRefreshAllPromise)),
     },
     holders: {
-      state: state(Boolean(topHolderCache || fullHolderCache), Boolean(topHolderRefresh || fullHolderRefresh)),
+      state: cacheState({
+        ready: holderReady,
+        building: Boolean(topHolderRefresh || fullHolderRefresh),
+      }),
+      refreshing: holderReady && Boolean(topHolderRefresh || fullHolderRefresh),
     },
     transfers: {
-      state: transferCache
-        ? "READY"
-        : transferRefresh
-          ? "BUILDING"
-          : transferLastError
-            ? "ERROR"
-            : "EMPTY",
+      state: cacheState({
+        ready: transferReady,
+        building: Boolean(transferRefresh),
+        error: transferLastError,
+      }),
+      refreshing: transferReady && Boolean(transferRefresh),
       error: transferLastError?.message || null,
       httpStatus: transferLastError?.status || null,
       lastAttemptAt: transferLastAttemptAt ? new Date(transferLastAttemptAt).toISOString() : null,
@@ -1471,7 +1506,11 @@ app.get("/api/cache-status", (_req, res) => {
       cooldownSeconds: Math.max(0, Math.ceil((blockscoutCooldownUntil - Date.now()) / 1000)),
     },
     market: {
-      state: state(Boolean(marketCache), Boolean(marketRefresh)),
+      state: cacheState({
+        ready: Boolean(marketCache),
+        building: Boolean(marketRefresh),
+      }),
+      refreshing: Boolean(marketCache && marketRefresh),
     },
     backgroundWorker: activityBackgroundStarted,
     checkedAt: new Date().toISOString(),
