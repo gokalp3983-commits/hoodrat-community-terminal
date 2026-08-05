@@ -1,0 +1,10 @@
+{
+  "name": "hoodrat-meme-intelligence-terminal",
+  "version": "1.0.0",
+  "private": true,
+  "description": "HOODRAT Meme Intelligence Terminal — market pressure, holder behavior and transparent risk signals.",
+  "main": "server.js",
+  "scripts": {"start": "node server.js"},
+  "engines": {"node": ">=18"},
+  "dependencies": {"express": "^4.21.2"}
+}

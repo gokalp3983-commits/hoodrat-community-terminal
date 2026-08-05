@@ -1,0 +1,440 @@
+
+/* Whale module only. Shared shell is owned exclusively by style.css. */
+
+body{
+  --whale-panel-width:280px;
+  --whale-panel-gap:4px;
+}
+
+.terminal-workspace{
+  width:100%;
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  gap:0;
+  align-items:stretch;
+}
+
+body.command-panel-open .terminal-workspace{
+  grid-template-columns:minmax(0,1fr) var(--whale-panel-width);
+  gap:var(--whale-panel-gap);
+}
+
+.terminal-workspace > #terminal-frame{
+  min-width:0;
+}
+
+/* Keep landing page centering until help panel opens */
+body:not(.command-panel-open) .terminal-workspace{
+  display:block;
+}
+
+body:not(.command-panel-open) .terminal-workspace > #terminal-frame{
+  width:min(1100px, calc(100% - 24px));
+  margin:12px auto;
+}
+
+body.command-panel-open .terminal-workspace > #terminal-frame{
+  width:100%;
+  margin:0;
+}
+
+.whale-application{
+  width:100%;
+  min-width:0;
+}
+
+.whale-terminal-column{
+  min-width:0;
+}
+
+.whale-howto{
+  margin:12px 0 18px;
+  line-height:1.55;
+}
+
+.whale-howto-title{
+  color:var(--yellow);
+  font-weight:700;
+}
+
+.trust,
+.green{
+  color:var(--green);
+}
+
+.red{
+  color:var(--red);
+}
+
+.orange{
+  color:var(--orange);
+}
+
+.yellow{
+  color:var(--yellow);
+}
+
+.cyan{
+  color:var(--cyan);
+}
+
+.muted{
+  color:var(--muted);
+}
+
+.whale-console{
+  border:1px solid var(--border);
+  padding:14px 16px;
+  background:rgba(255,255,255,.012);
+}
+
+.line{
+  margin:2px 0;
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+}
+
+.boot-line{
+  opacity:0;
+  transform:translateY(3px);
+  transition:.18s;
+}
+
+.boot-line.visible{
+  opacity:1;
+  transform:none;
+}
+
+.whale-output{
+  margin-top:12px;
+}
+
+.block{
+  margin:12px 0;
+  padding:14px 16px;
+  border:1px solid var(--border);
+  background:rgba(255,255,255,.012);
+}
+
+.kv{
+  display:grid;
+  grid-template-columns:minmax(180px,1fr) minmax(0,1.2fr);
+  gap:14px;
+  padding:4px 0;
+}
+
+#terminal-application table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:8px;
+}
+
+#terminal-application th,
+#terminal-application td{
+  padding:8px 6px;
+  border-bottom:1px solid var(--border);
+  text-align:left;
+  vertical-align:top;
+}
+
+#terminal-application th{
+  color:var(--yellow);
+}
+
+.wallet-cell{
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+}
+
+.copy-wallet{
+  border:0;
+  background:transparent;
+  color:var(--cyan);
+  font:inherit;
+  line-height:1;
+  padding:0;
+  cursor:pointer;
+}
+
+.copy-wallet:hover,
+.copy-wallet:focus{
+  color:var(--yellow);
+}
+
+.copy-notice{
+  color:var(--green);
+  margin:6px 0;
+}
+
+.whale-prompt-row{
+  display:none;
+  gap:8px;
+  margin-top:12px;
+  padding-bottom:4px;
+  border-bottom:1px solid var(--green);
+}
+
+.whale-prompt-row.visible{
+  display:flex;
+}
+
+.whale-prompt-label{
+  color:var(--green);
+  white-space:nowrap;
+}
+
+#commandInput{
+  flex:1;
+  min-width:0;
+  border:0;
+  outline:0;
+  background:transparent;
+  color:var(--text);
+  font:inherit;
+  padding:0;
+}
+
+.command-panel-slot{
+  display:none;
+  min-width:0;
+}
+
+body.command-panel-open .command-panel-slot{
+  display:flex;
+  align-items:stretch;
+}
+
+.command-panel{
+  width:100%;
+  height:100%;
+  border:1px solid var(--green);
+  background:#020b07;
+  padding:14px;
+  overflow:auto;
+  box-shadow:0 0 0 1px rgba(57,255,20,.08);
+}
+
+.command-panel[hidden]{
+  display:none;
+}
+
+.command-panel.visible{
+  display:block;
+  animation:panel-in .18s ease-out;
+}
+
+.command-panel-title{
+  color:var(--yellow);
+  font-weight:700;
+  margin-bottom:10px;
+}
+
+.command-panel-note{
+  color:var(--muted);
+  font-size:.82em;
+  margin-bottom:10px;
+}
+
+.command-panel-list{
+  display:grid;
+  gap:5px;
+}
+
+.command-group{
+  margin-bottom:13px;
+}
+
+.command-group:last-child{
+  margin-bottom:0;
+}
+
+.command-group-title{
+  margin:4px 5px 5px;
+  padding-bottom:4px;
+  border-bottom:1px dashed rgba(255,193,7,.55);
+  color:var(--yellow);
+  font-size:.78em;
+  font-weight:700;
+  letter-spacing:.12em;
+}
+
+.command-panel button{
+  width:100%;
+  border:0;
+  border-bottom:1px solid rgba(57,255,20,.18);
+  background:transparent;
+  color:var(--cyan);
+  font:inherit;
+  text-align:left;
+  padding:7px 5px;
+  cursor:pointer;
+}
+
+.command-panel button:hover,
+.command-panel button:focus-visible,
+.command-panel button.active{
+  color:var(--yellow);
+  background:rgba(57,255,20,.06);
+}
+
+.command-panel button.active::before{
+  content:"▶ ";
+  color:var(--yellow);
+}
+
+.command-panel button span{
+  display:block;
+  color:var(--muted);
+  font-size:.78em;
+  margin-top:2px;
+}
+
+.help-open-copy{
+  margin-top:10px;
+  color:var(--cyan);
+}
+
+.rank-col,
+.status-col{
+  text-align:center;
+  white-space:nowrap;
+}
+
+.balance-col{
+  color:var(--cyan);
+}
+
+.whales12-summary{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:6px 18px;
+  margin:12px 0;
+}
+
+.status-accumulating{color:var(--green)}
+.status-distributing{color:var(--red)}
+.status-balanced{color:var(--yellow)}
+.status-dormant{color:var(--muted)}
+
+@keyframes panel-in{
+  from{opacity:0;transform:translateX(10px)}
+  to{opacity:1;transform:translateX(0)}
+}
+
+@media(max-width:900px){
+  body.command-panel-open .terminal-workspace{
+    grid-template-columns:minmax(0,1fr);
+    gap:4px;
+  }
+
+  body.command-panel-open .command-panel-slot{
+    display:block;
+  }
+
+  .command-panel{
+    height:auto;
+    max-height:45vh;
+  }
+}
+
+@media(max-width:720px){
+  .kv,
+  .whales12-summary{
+    grid-template-columns:1fr;
+  }
+
+  #terminal-application table{
+    font-size:.8rem;
+  }
+
+  .whale-prompt-label{
+    font-size:.84rem;
+  }
+}
+
+
+/* =========================================================
+   v4.0.2 — CENTERED SPLIT VIEW + INDEPENDENT SCROLLING
+   ========================================================= */
+
+/* Keep the whole workspace centered instead of fitting the viewport */
+body.command-panel-open .terminal-workspace{
+  width:min(
+    calc(1100px + var(--whale-panel-width) + var(--whale-panel-gap)),
+    calc(100% - 24px)
+  );
+  margin:12px auto;
+  grid-template-columns:
+    minmax(0,1100px)
+    var(--whale-panel-width);
+  gap:var(--whale-panel-gap);
+  align-items:start;
+}
+
+/* Main terminal keeps its normal master-template width */
+body.command-panel-open .terminal-workspace > #terminal-frame{
+  width:100%;
+  margin:0;
+}
+
+/* Commands window has its own viewport-height scroll area */
+body.command-panel-open .command-panel-slot{
+  display:block;
+  position:sticky;
+  top:12px;
+  height:calc(100vh - 24px);
+  min-height:0;
+  overflow:hidden;
+}
+
+body.command-panel-open .command-panel{
+  height:100%;
+  min-height:0;
+  max-height:none;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  scrollbar-gutter:stable;
+}
+
+/* Main page scrolls normally and independently */
+body.command-panel-open{
+  overflow-y:auto;
+}
+
+@media(max-width:900px){
+  body.command-panel-open .terminal-workspace{
+    width:calc(100% - 2px);
+    margin:1px auto;
+    grid-template-columns:minmax(0,1fr);
+    gap:4px;
+  }
+
+  body.command-panel-open .command-panel-slot{
+    position:static;
+    height:auto;
+    overflow:visible;
+  }
+
+  body.command-panel-open .command-panel{
+    height:auto;
+    max-height:45vh;
+    overflow-y:auto;
+  }
+}
+
+.intel-block { margin: 0 0 1.05rem; border-left: 2px solid var(--accent, #65ff8f); padding-left: .8rem; }
+.intel-title { color: #ff5f5f; font-weight: 800; letter-spacing: .06em; margin-bottom: .45rem; }
+.intel-row { display: grid; grid-template-columns: minmax(190px, 1fr) minmax(140px, 1fr); gap: 1rem; padding: .12rem 0; }
+.intel-row span { color: #a9b7ad; }
+.intel-row strong { color: #edf7f0; text-align: left; overflow-wrap: anywhere; }
+.intel-note { margin-top: .55rem; color: #829188; font-size: .86rem; line-height: 1.4; }
+.intel-event { padding: .18rem 0; color: #dfe9e2; }
+.intel-event > span { color: #718078; margin-right: .45rem; }
+.positive { color: #62f58b !important; }
+.negative { color: #ff6767 !important; }
+.status-warning { color: #ffcf5b; }
+.status-error { color: #ff6767; }
+.prompt-echo { color: #62f58b; font-weight: 700; }
+.command-echo { margin: .35rem 0; }
+@media (max-width: 680px) { .intel-row { grid-template-columns: 1fr; gap: .05rem; margin-bottom: .25rem; } }

@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#020704">
+  <meta name="description" content="HOODRAT Meme Intelligence Terminal — community-built Robinhood Chain market intelligence.">
+  <title>HOODRAT Meme Intelligence Terminal</title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/intel.css">
+</head>
+<body>
+  <div id="terminal-workspace" class="terminal-workspace">
+    <main id="terminal-frame" class="shell terminal-frame">
+      <section class="terminal" aria-label="HOODRAT Meme Intelligence Terminal">
+        <div id="terminal-header" class="terminal-area terminal-header">
+          <header class="header community-header">
+            <a href="https://hoodrat-landing-page.onrender.com/" title="Return to HOODRAT Community Terminal">
+              <img class="mascot community-mascot" src="/assets/hoodrat-mascot.jpeg" alt="HOODRAT mascot">
+            </a>
+            <div class="community-divider" aria-hidden="true">══════════════════════════════════════════════════════</div>
+            <div class="community-title-row">
+              <h1>HOODRAT COMMUNITY TERMINAL</h1>
+              <span class="online-status"><span class="online-dot" aria-hidden="true">●</span> ONLINE</span>
+            </div>
+            <p class="community-subtitle">Independent Community Tools <span aria-hidden="true">•</span> Robinhood Chain Ecosystem</p>
+            <div class="community-divider" aria-hidden="true">══════════════════════════════════════════════════════</div>
+            <div class="module-title">Meme Intelligence Terminal</div>
+          </header>
+        </div>
+
+        <div id="terminal-live-panel" class="terminal-area terminal-live-panel">
+          <section id="marketPanel" class="market-panel" aria-label="Live HOODRAT market data">
+            <div class="market-line"><span id="marketPriceStatus" class="market-tag">[ CONNECTING ]</span><span class="market-label">Price</span><span class="market-colon">:</span><strong id="marketPrice" class="market-value">—</strong></div>
+            <div class="market-line"><span id="marketCapStatus" class="market-tag">[ CONNECTING ]</span><span class="market-label">Market Cap</span><span class="market-colon">:</span><strong id="marketCap" class="market-value">—</strong></div>
+            <div class="market-line"><span id="marketHoldersStatus" class="market-tag">[ CONNECTING ]</span><span class="market-label">Holders</span><span class="market-colon">:</span><strong id="marketHolders" class="market-value">—</strong></div>
+            <div class="market-line"><span id="marketVolumeStatus" class="market-tag">[ CONNECTING ]</span><span class="market-label">24h Volume</span><span class="market-colon">:</span><strong id="marketVolume" class="market-value">—</strong></div>
+            <div class="market-line market-updated-line"><span id="marketUpdatedStatus" class="market-tag">[ CONNECTING ]</span><span class="market-label">Updated</span><span class="market-colon">:</span><strong id="marketUpdated" class="market-value">—</strong></div>
+          </section>
+        </div>
+
+        <div id="terminal-application" class="terminal-area terminal-application">
+          <div id="appLayout" class="whale-application">
+            <div id="terminalColumn" class="whale-terminal-column">
+              <section class="whale-howto">
+                <div class="whale-howto-title">How to use:</div>
+                <div>&gt; Type <strong class="red">help</strong> for available commands.</div>
+                <div class="trust">&gt; Intelligence signals are descriptive estimates, not financial advice.</div>
+              </section>
+              <section class="whale-console">
+                <div id="boot"></div>
+                <div id="history" class="whale-output" aria-live="polite"></div>
+              </section>
+            </div>
+          </div>
+        </div>
+
+        <div id="terminal-prompt" class="terminal-area terminal-prompt">
+          <div id="promptRow" class="whale-prompt-row">
+            <label class="whale-prompt-label" for="commandInput">hoodrat@intel:~$</label>
+            <input id="commandInput" autocomplete="off" autocapitalize="none" spellcheck="false" aria-label="Meme intelligence command">
+          </div>
+        </div>
+
+        <div id="terminal-footer" class="terminal-area terminal-footer">
+          <div class="footer-version">HOODRAT Community Terminal ver 2.2.1</div>
+          <footer class="footer">Independent community-built tools.<br>Not affiliated with or endorsed by the official $HOODRAT team.<br>Built for the Robinhood Chain $HOODRAT ecosystem.</footer>
+        </div>
+      </section>
+    </main>
+
+    <div id="command-panel-slot" class="command-panel-slot">
+      <aside id="commandPanel" class="command-panel floating-command-panel" aria-label="Available terminal commands" aria-hidden="true">
+        <div class="command-panel-title">AVAILABLE COMMANDS</div>
+        <div class="command-panel-note">Click a command to place it in the terminal prompt.</div>
+        <div class="command-panel-list">
+          <div class="command-group">
+            <div class="command-group-title">INTELLIGENCE</div>
+            <button type="button" data-command="scan">scan<span>Complete market snapshot</span></button>
+            <button type="button" data-command="pulse">pulse<span>Market-state interpretation</span></button>
+            <button type="button" data-command="pressure">pressure<span>Buy/sell pressure (12h)</span></button>
+            <button type="button" data-command="fresh">fresh<span>Newly observed buyer flow</span></button>
+            <button type="button" data-command="holders">holders<span>Distribution and movement</span></button>
+            <button type="button" data-command="risk">risk<span>Transparent risk metrics</span></button>
+            <button type="button" data-command="live">live<span>Notable recent activity</span></button>
+          </div>
+          <div class="command-group">
+            <div class="command-group-title">SYSTEM</div>
+            <button type="button" data-command="methodology">methodology<span>Signal rules and limits</span></button>
+            <button type="button" data-command="clear">clear<span>Clear terminal output</span></button>
+            <button type="button" data-command="help">help<span>Show command guide</span></button>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+  <script src="/intel.js"></script>
+</body>
+</html>
