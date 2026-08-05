@@ -42,7 +42,7 @@ const BLOCKSCOUT_MAX_BACKOFF_MS = 30_000;
 const ADDRESS_CLASSIFICATION_TTL = 10 * 60_000;
 const MAX_STALE_AGE = 60 * 60_000;
 const TRANSFER_LOOKBACK_HOURS = 24;
-const TRANSFER_PAGE_SIZE = 10_000;
+const TRANSFER_MAX_PAGES = Number(process.env.TRANSFER_MAX_PAGES || 120);
 
 let topHolderCache = null;
 let fullHolderCache = null;
@@ -54,6 +54,9 @@ let topHolderRefresh = null;
 let fullHolderRefresh = null;
 let marketRefresh = null;
 let transferRefresh = null;
+let transferLastError = null;
+let transferLastAttemptAt = null;
+let transferLastSuccessAt = null;
 const activityCache = new Map();
 const activityRefreshes = new Map();
 const addressClassificationCache = new Map();
@@ -566,55 +569,82 @@ function transferHash(item) {
 }
 
 async function loadRecentTokenTransfers() {
-  if (
-    transferCache &&
-    cacheAgeMs(transferCache) < TRANSFER_TTL
-  ) {
+  if (transferCache && cacheAgeMs(transferCache) < TRANSFER_TTL) {
     return withCacheState(transferCache, "memory");
   }
 
   if (transferRefresh) return transferRefresh;
 
   transferRefresh = (async () => {
+    transferLastAttemptAt = Date.now();
+    transferLastError = null;
+
     try {
-        const rpcBase = API_BASE.replace(/\/api\/v2\/?$/, "/api");
-        const params = new URLSearchParams({
-          module: "account",
-          action: "tokentx",
-          contractaddress: TOKEN,
-          page: "1",
-          offset: String(TRANSFER_PAGE_SIZE),
-          sort: "desc",
-        });
-        const data = await fetchJson(`${rpcBase}?${params.toString()}`);
-        const items = Array.isArray(data?.result) ? data.result : [];
-        const cutoff = Date.now() - TRANSFER_LOOKBACK_HOURS * 60 * 60_000;
+      const cutoff = Date.now() - TRANSFER_LOOKBACK_HOURS * 60 * 60_000;
+      const collected = [];
+      let nextPageParams = null;
+      let page = 0;
+      let reachedCutoff = false;
 
-        transferCache = {
-          generatedAt: Date.now(),
-          source: "Blockscout RPC token transfers",
-          truncated: items.length >= TRANSFER_PAGE_SIZE,
-          items: items
-            .map((item) => ({
-              from: transferAddress(item, "from"),
-              to: transferAddress(item, "to"),
-              rawValue: transferRawValue(item),
-              timestamp: transferTimestamp(item),
-              hash: transferHash(item),
-            }))
-            .filter((item) => item.timestamp >= cutoff),
-        };
+      do {
+        const url = new URL(`${API_BASE}/tokens/${TOKEN}/transfers`);
+        if (nextPageParams && typeof nextPageParams === "object") {
+          for (const [key, value] of Object.entries(nextPageParams)) {
+            if (value !== null && value !== undefined) {
+              url.searchParams.set(key, String(value));
+            }
+          }
+        }
 
-        return transferCache;
+        const data = await fetchJson(url.toString());
+        const items = Array.isArray(data?.items) ? data.items : [];
+        page += 1;
+
+        for (const item of items) {
+          const timestamp = transferTimestamp(item);
+          if (timestamp && timestamp < cutoff) {
+            reachedCutoff = true;
+            continue;
+          }
+
+          collected.push({
+            from: transferAddress(item, "from"),
+            to: transferAddress(item, "to"),
+            rawValue: transferRawValue(item),
+            timestamp,
+            hash: transferHash(item),
+          });
+        }
+
+        nextPageParams = data?.next_page_params || null;
+
+        // Results are newest-first. Once a page reaches the lookback cutoff,
+        // older pages cannot contribute to the 24-hour intelligence window.
+        if (reachedCutoff || items.length === 0) break;
+      } while (nextPageParams && page < TRANSFER_MAX_PAGES);
+
+      transferCache = {
+        generatedAt: Date.now(),
+        source: "Blockscout v2 token transfers",
+        pagesFetched: page,
+        truncated: Boolean(nextPageParams) && !reachedCutoff,
+        items: collected
+          .filter((item) => item.timestamp >= cutoff)
+          .sort((a, b) => b.timestamp - a.timestamp),
+      };
+
+      transferLastSuccessAt = Date.now();
+      return transferCache;
     } catch (error) {
       console.error("Transfer refresh failed:", error);
+      transferLastError = {
+        message: String(error?.message || error || "Unknown transfer error"),
+        status: Number(error?.status || 0) || null,
+        at: Date.now(),
+      };
 
       if (canUseStale(transferCache)) {
-        return withCacheState(
-          transferCache,
-          "stale-fallback",
-          true
-        );
+        return withCacheState(transferCache, "stale-fallback", true);
       }
 
       throw error;
@@ -1408,7 +1438,17 @@ app.get("/api/cache-status", (_req, res) => {
       state: state(Boolean(topHolderCache || fullHolderCache), Boolean(topHolderRefresh || fullHolderRefresh)),
     },
     transfers: {
-      state: state(Boolean(transferCache), Boolean(transferRefresh)),
+      state: transferCache
+        ? "READY"
+        : transferRefresh
+          ? "BUILDING"
+          : transferLastError
+            ? "ERROR"
+            : "EMPTY",
+      error: transferLastError?.message || null,
+      httpStatus: transferLastError?.status || null,
+      lastAttemptAt: transferLastAttemptAt ? new Date(transferLastAttemptAt).toISOString() : null,
+      lastSuccessAt: transferLastSuccessAt ? new Date(transferLastSuccessAt).toISOString() : null,
     },
     market: {
       state: state(Boolean(marketCache), Boolean(marketRefresh)),

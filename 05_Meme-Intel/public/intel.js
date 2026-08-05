@@ -61,6 +61,9 @@ async function cmdStatus() {
   try {
     const s = await api("/api/cache-status");
     const stateClass = (state) => state === "READY" ? "positive" : state === "BUILDING" ? "status-warning" : "negative";
+    const transferDetail = s.transfers?.state === "ERROR"
+      ? ` Transfer error: ${esc(s.transfers.error || "unknown error")}. The worker will retry automatically.`
+      : "";
     block("INTELLIGENCE CACHE STATUS", [
       ["12h activity", esc(s.activity12.state), stateClass(s.activity12.state)],
       ["24h activity", esc(s.activity24.state), stateClass(s.activity24.state)],
@@ -68,7 +71,7 @@ async function cmdStatus() {
       ["Transfer data", esc(s.transfers.state), stateClass(s.transfers.state)],
       ["Market data", esc(s.market.state), stateClass(s.market.state)],
       ["Background worker", s.backgroundWorker ? "RUNNING" : "STARTING", s.backgroundWorker ? "positive" : "status-warning"]
-    ], "READY means cached data is available. BUILDING means the background scan is still fetching and classifying on-chain data. EMPTY means that source has not completed its first successful load yet.");
+    ], `READY means cached data is available. BUILDING means the background scan is fetching and classifying on-chain data. EMPTY means the first load has not completed. ERROR means the latest request failed.${transferDetail}`);
   } catch (e) {
     print(`[ ERROR ] Unable to read cache status: ${esc(e.message)}`, "status-error");
   }
