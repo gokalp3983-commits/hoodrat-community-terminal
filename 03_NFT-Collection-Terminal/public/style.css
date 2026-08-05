@@ -1662,18 +1662,17 @@ a:hover,a:focus-visible{
   background:rgba(255,125,0,.055);
   box-shadow:inset 0 0 12px rgba(255,125,0,.035);
 }
-.sales-floor-label{
-  color:var(--muted);
-  font-size:.72em;
-  letter-spacing:.09em;
-}
+.sales-floor-label,
 .sales-floor-price{
   color:#ff9d21;
-  font-size:1.34em;
+  font-size:1.08em;
   line-height:1;
   font-weight:800;
   text-shadow:0 0 9px rgba(255,157,33,.28);
   white-space:nowrap;
+}
+.sales-floor-label{
+  letter-spacing:.09em;
 }
 .sales-floor-trend{
   flex-basis:100%;
@@ -1682,7 +1681,8 @@ a:hover,a:focus-visible{
   margin-top:1px;
 }
 @media(max-width:560px){
-  .sales-floor-price{font-size:1.22em}
+  .sales-floor-label,
+  .sales-floor-price{font-size:1em}
 }
 
 /* 12-hour OpenSea floor-price trend */
