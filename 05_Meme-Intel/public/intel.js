@@ -61,14 +61,20 @@ async function cmdStatus() {
   try {
     const s = await api("/api/cache-status");
     const stateClass = (state) => state === "READY" ? "positive" : state === "BUILDING" ? "status-warning" : "negative";
+    const progress = s.transfers?.progress;
+    const transferValue = s.transfers.state === "BUILDING" && progress
+      ? `BUILDING — ${progress.pagesFetched || 0} pages / ${progress.transfersFetched || 0} transfers`
+      : s.transfers.state;
     const transferDetail = s.transfers?.state === "ERROR"
       ? ` Transfer error: ${esc(s.transfers.error || "unknown error")}. The worker will retry automatically.`
-      : "";
+      : s.transfers?.cooldownSeconds > 0
+        ? ` Blockscout rate-limit cooldown: ${s.transfers.cooldownSeconds}s.`
+        : "";
     block("INTELLIGENCE CACHE STATUS", [
       ["12h activity", esc(s.activity12.state), stateClass(s.activity12.state)],
       ["24h activity", esc(s.activity24.state), stateClass(s.activity24.state)],
       ["Holder data", esc(s.holders.state), stateClass(s.holders.state)],
-      ["Transfer data", esc(s.transfers.state), stateClass(s.transfers.state)],
+      ["Transfer data", esc(transferValue), stateClass(s.transfers.state)],
       ["Market data", esc(s.market.state), stateClass(s.market.state)],
       ["Background worker", s.backgroundWorker ? "RUNNING" : "STARTING", s.backgroundWorker ? "positive" : "status-warning"]
     ], `READY means cached data is available. BUILDING means the background scan is fetching and classifying on-chain data. EMPTY means the first load has not completed. ERROR means the latest request failed.${transferDetail}`);
@@ -128,17 +134,15 @@ async function cmdFresh() {
 
 async function cmdHolders() {
   try {
-    const [s,a] = await Promise.all([api("/api/stats"), activity(24)]);
+    const s = await api("/api/stats");
     const st=s.stats||{};
     block("HOLDER DISTRIBUTION", [
       ["Tracked holders", esc(s.metadata?.holdersCount ?? s.metadata?.totalHolders ?? "UNAVAILABLE")],
       ["Top-10 concentration", st.top10Percentage != null ? `${fmt(st.top10Percentage)}%` : "UNAVAILABLE"],
       ["Top-30 concentration", st.top30Percentage != null ? `${fmt(st.top30Percentage)}%` : "UNAVAILABLE"],
-      ["New Top-30 entrants", String(a.newWhales?.length || 0)],
-      ["Rank movers", String(a.holderChanges?.length || 0)],
-      ["Accumulating Top-30", String(a.top30Summary?.accumulating || 0)],
-      ["Distributing Top-30", String(a.top30Summary?.distributing || 0)]
-    ], "Infrastructure, burn and liquidity addresses are excluded where identified.");
+      ["Largest tracked holder", st.largestHolder?.balance ? `${fmt(num(st.largestHolder.balance))} HOODRAT` : "UNAVAILABLE"],
+      ["Snapshot comparison", s.snapshot?.comparisonAvailable ? "AVAILABLE" : "WAITING FOR NEXT SNAPSHOT"]
+    ], "This command uses holder data only and remains available while transfer intelligence is still building.");
   } catch(e){ warming(e); }
 }
 

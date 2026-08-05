@@ -36,9 +36,9 @@ const TRANSFER_TTL = 2 * 60_000;
 const ACTIVITY_TTL = 2 * 60_000;
 const BACKGROUND_ACTIVITY_REFRESH_MS = 5 * 60_000;
 const ACTIVITY_REPORT_GAP_MS = 2_000;
-const BLOCKSCOUT_MIN_INTERVAL_MS = 650;
-const BLOCKSCOUT_MAX_ATTEMPTS = 5;
-const BLOCKSCOUT_MAX_BACKOFF_MS = 30_000;
+const BLOCKSCOUT_MIN_INTERVAL_MS = Number(process.env.BLOCKSCOUT_MIN_INTERVAL_MS || 2_000);
+const BLOCKSCOUT_MAX_ATTEMPTS = Number(process.env.BLOCKSCOUT_MAX_ATTEMPTS || 7);
+const BLOCKSCOUT_MAX_BACKOFF_MS = Number(process.env.BLOCKSCOUT_MAX_BACKOFF_MS || 60_000);
 const ADDRESS_CLASSIFICATION_TTL = 10 * 60_000;
 const MAX_STALE_AGE = 60 * 60_000;
 const TRANSFER_LOOKBACK_HOURS = 24;
@@ -65,6 +65,8 @@ let activityBackgroundStarted = false;
 let activityRefreshAllPromise = null;
 let blockscoutQueue = Promise.resolve();
 let lastBlockscoutRequestAt = 0;
+let blockscoutCooldownUntil = 0;
+let transferProgress = { pagesFetched: 0, transfersFetched: 0, startedAt: null };
 
 app.use(express.static(path.join(__dirname, "public")));
 
@@ -99,8 +101,8 @@ function queueBlockscoutRequest(task) {
   const run = async () => {
     const wait = Math.max(
       0,
-      BLOCKSCOUT_MIN_INTERVAL_MS -
-        (Date.now() - lastBlockscoutRequestAt)
+      BLOCKSCOUT_MIN_INTERVAL_MS - (Date.now() - lastBlockscoutRequestAt),
+      blockscoutCooldownUntil - Date.now()
     );
 
     if (wait > 0) await sleep(wait);
@@ -132,6 +134,10 @@ async function fetchJson(url, attempts = BLOCKSCOUT_MAX_ATTEMPTS) {
           const error = new Error(`HTTP ${response.status}`);
           error.status = response.status;
           error.retryAfterMs = retryAfterMs(response);
+          if (response.status === 429) {
+            const cooldown = Math.max(error.retryAfterMs || 0, 15_000);
+            blockscoutCooldownUntil = Math.max(blockscoutCooldownUntil, Date.now() + cooldown);
+          }
           throw error;
         }
 
@@ -580,6 +586,7 @@ async function loadRecentTokenTransfers() {
     transferLastError = null;
 
     try {
+      transferProgress = { pagesFetched: 0, transfersFetched: 0, startedAt: Date.now() };
       const cutoff = Date.now() - TRANSFER_LOOKBACK_HOURS * 60 * 60_000;
       const collected = [];
       let nextPageParams = null;
@@ -599,6 +606,8 @@ async function loadRecentTokenTransfers() {
         const data = await fetchJson(url.toString());
         const items = Array.isArray(data?.items) ? data.items : [];
         page += 1;
+        transferProgress.pagesFetched = page;
+        transferProgress.transfersFetched += items.length;
 
         for (const item of items) {
           const timestamp = transferTimestamp(item);
@@ -1449,6 +1458,8 @@ app.get("/api/cache-status", (_req, res) => {
       httpStatus: transferLastError?.status || null,
       lastAttemptAt: transferLastAttemptAt ? new Date(transferLastAttemptAt).toISOString() : null,
       lastSuccessAt: transferLastSuccessAt ? new Date(transferLastSuccessAt).toISOString() : null,
+      progress: transferRefresh ? transferProgress : null,
+      cooldownSeconds: Math.max(0, Math.ceil((blockscoutCooldownUntil - Date.now()) / 1000)),
     },
     market: {
       state: state(Boolean(marketCache), Boolean(marketRefresh)),
