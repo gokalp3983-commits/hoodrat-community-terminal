@@ -1,11 +1,11 @@
 const MODULES = {
   eligibility: {
     title: "NFT Eligibility Checker",
-    url: "https://hoodrat-holder-checker.onrender.com/",
+    url: "https://nft-eligibility-checker-archive.onrender.com/",
   },
   whales: {
     title: "Whale Activity Tracker",
-    url: "https://nft-eligibility-checker-archive.onrender.com",
+    url: "https://whale-activity-tracker-xnj8.onrender.com/",
   },
   nft: {
     title: "HOODRATS NFT Collection Terminal",
