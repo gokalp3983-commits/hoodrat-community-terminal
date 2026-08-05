@@ -100,8 +100,8 @@ async function getJson(url){
 function cacheWarmingMessage(command,hours){
   const period=Number(hours)===12?"12-hour":"24-hour";
   block(`
-    <div class="yellow">[ CACHE ] ${period} activity data is warming up.</div>
-    <div class="muted">The shared background refresh is still running. Please run <span class="cyan">${esc(command)}</span> again shortly.</div>
+    <div class="yellow">[ CACHE BUILDING ] ${period} activity data is being assembled.</div>
+    <div class="muted">The tracker is fetching and classifying several Blockscout pages while pacing requests to avoid HTTP 429 rate limits. A cold Render start can take a few minutes. Use <span class="cyan">status</span> to see progress, then retry <span class="cyan">${esc(command)}</span> when the cache is READY.</div>
   `);
 }
 function echo(command){
@@ -500,6 +500,34 @@ async function infrastructure(){
   `);
 }
 
+async function cacheStatus(){
+  const d=await getJson("/api/cache-status");
+  const row=(label,item,extra="")=>`
+    <div class="kv"><span>${esc(label)}</span><span class="${item.state==="READY"?"green":item.state==="ERROR"?"red":item.state==="BUILDING"?"yellow":"muted"}">${esc(item.state)}${extra}</span></div>`;
+
+  const progress=d.transfers?.progress;
+  const transferExtra=progress
+    ?` — ${Number(progress.pagesFetched||0).toLocaleString()} pages / ${Number(progress.transfersFetched||0).toLocaleString()} transfers`
+    :(d.transfers?.pagesFetched?` — ${Number(d.transfers.pagesFetched).toLocaleString()} pages cached`:"");
+  const cooldown=d.transfers?.cooldownSeconds>0
+    ?`<div class="muted">Blockscout cooldown: ${Number(d.transfers.cooldownSeconds)} seconds</div>`:"";
+  const errors=[d.activity12?.error,d.activity24?.error,d.transfers?.error].filter(Boolean);
+
+  block(`
+    <div class="yellow">[ WHALE CACHE STATUS ]</div>
+    ${row("12h activity",d.activity12)}
+    ${row("24h activity",d.activity24)}
+    ${row("Holder data",d.holders)}
+    ${row("Transfer data",d.transfers,transferExtra)}
+    ${row("Market data",d.market)}
+    <div class="kv"><span>Background worker</span><span class="${d.backgroundWorker?"green":"red"}">${d.backgroundWorker?"RUNNING":"STOPPED"}</span></div>
+    ${cooldown}
+    ${d.transfers?.truncated?`<div class="muted">Initial transfer cache is bounded (${esc(d.transfers.partialReason||"safety limit")}) and remains usable while later refreshes continue.</div>`:""}
+    ${errors.length?`<div class="red">Latest error: ${esc(errors[0])}</div>`:""}
+    <div class="muted">READY means usable cached data exists. BUILDING means the background worker is fetching data. ERROR means the latest request failed without a usable cache.</div>
+  `);
+}
+
 async function execute(command){
   const text=command.trim(),lower=text.toLowerCase();
   if(!text)return;
@@ -515,6 +543,11 @@ async function execute(command){
     }
     else if(lower==="clear"){
       history.innerHTML="";
+    }
+    else if(lower==="status"){
+      progress=showProgress("Checking whale cache and Blockscout scan progress... Please wait.");
+      await cacheStatus();
+      progress.remove();
     }
     else if(lower==="whales12"){
       progress=showProgress("Loading Top-30 whale activity for the last 12 hours... Please wait.");

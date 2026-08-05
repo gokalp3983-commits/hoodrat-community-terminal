@@ -36,13 +36,14 @@ const TRANSFER_TTL = 2 * 60_000;
 const ACTIVITY_TTL = 2 * 60_000;
 const BACKGROUND_ACTIVITY_REFRESH_MS = 5 * 60_000;
 const ACTIVITY_REPORT_GAP_MS = 2_000;
-const BLOCKSCOUT_MIN_INTERVAL_MS = 650;
-const BLOCKSCOUT_MAX_ATTEMPTS = 5;
-const BLOCKSCOUT_MAX_BACKOFF_MS = 30_000;
+const BLOCKSCOUT_MIN_INTERVAL_MS = Number(process.env.BLOCKSCOUT_MIN_INTERVAL_MS || 2_000);
+const BLOCKSCOUT_MAX_ATTEMPTS = Number(process.env.BLOCKSCOUT_MAX_ATTEMPTS || 7);
+const BLOCKSCOUT_MAX_BACKOFF_MS = Number(process.env.BLOCKSCOUT_MAX_BACKOFF_MS || 60_000);
 const ADDRESS_CLASSIFICATION_TTL = 10 * 60_000;
 const MAX_STALE_AGE = 60 * 60_000;
 const TRANSFER_LOOKBACK_HOURS = 24;
-const TRANSFER_PAGE_SIZE = 10_000;
+const TRANSFER_MAX_PAGES = Number(process.env.TRANSFER_MAX_PAGES || 30);
+const TRANSFER_INITIAL_MAX_MS = Number(process.env.TRANSFER_INITIAL_MAX_MS || 120_000);
 
 let topHolderCache = null;
 let fullHolderCache = null;
@@ -54,6 +55,11 @@ let topHolderRefresh = null;
 let fullHolderRefresh = null;
 let marketRefresh = null;
 let transferRefresh = null;
+let transferLastError = null;
+let transferLastAttemptAt = null;
+let transferLastSuccessAt = null;
+let transferProgress = { pagesFetched: 0, transfersFetched: 0, startedAt: null };
+const activityLastErrors = new Map();
 const activityCache = new Map();
 const activityRefreshes = new Map();
 const addressClassificationCache = new Map();
@@ -62,6 +68,7 @@ let activityBackgroundStarted = false;
 let activityRefreshAllPromise = null;
 let blockscoutQueue = Promise.resolve();
 let lastBlockscoutRequestAt = 0;
+let blockscoutCooldownUntil = 0;
 
 app.use(express.static(path.join(__dirname, "public")));
 
@@ -96,8 +103,8 @@ function queueBlockscoutRequest(task) {
   const run = async () => {
     const wait = Math.max(
       0,
-      BLOCKSCOUT_MIN_INTERVAL_MS -
-        (Date.now() - lastBlockscoutRequestAt)
+      BLOCKSCOUT_MIN_INTERVAL_MS - (Date.now() - lastBlockscoutRequestAt),
+      blockscoutCooldownUntil - Date.now()
     );
 
     if (wait > 0) await sleep(wait);
@@ -129,6 +136,13 @@ async function fetchJson(url, attempts = BLOCKSCOUT_MAX_ATTEMPTS) {
           const error = new Error(`HTTP ${response.status}`);
           error.status = response.status;
           error.retryAfterMs = retryAfterMs(response);
+          if (response.status === 429) {
+            const cooldown = Math.max(error.retryAfterMs || 0, 15_000);
+            blockscoutCooldownUntil = Math.max(
+              blockscoutCooldownUntil,
+              Date.now() + cooldown
+            );
+          }
           throw error;
         }
 
@@ -566,55 +580,101 @@ function transferHash(item) {
 }
 
 async function loadRecentTokenTransfers() {
-  if (
-    transferCache &&
-    cacheAgeMs(transferCache) < TRANSFER_TTL
-  ) {
+  if (transferCache && cacheAgeMs(transferCache) < TRANSFER_TTL) {
     return withCacheState(transferCache, "memory");
   }
 
   if (transferRefresh) return transferRefresh;
 
   transferRefresh = (async () => {
+    transferLastAttemptAt = Date.now();
+    transferLastError = null;
+
     try {
-        const rpcBase = API_BASE.replace(/\/api\/v2\/?$/, "/api");
-        const params = new URLSearchParams({
-          module: "account",
-          action: "tokentx",
-          contractaddress: TOKEN,
-          page: "1",
-          offset: String(TRANSFER_PAGE_SIZE),
-          sort: "desc",
-        });
-        const data = await fetchJson(`${rpcBase}?${params.toString()}`);
-        const items = Array.isArray(data?.result) ? data.result : [];
-        const cutoff = Date.now() - TRANSFER_LOOKBACK_HOURS * 60 * 60_000;
+      transferProgress = {
+        pagesFetched: 0,
+        transfersFetched: 0,
+        startedAt: Date.now(),
+      };
 
-        transferCache = {
-          generatedAt: Date.now(),
-          source: "Blockscout RPC token transfers",
-          truncated: items.length >= TRANSFER_PAGE_SIZE,
-          items: items
-            .map((item) => ({
-              from: transferAddress(item, "from"),
-              to: transferAddress(item, "to"),
-              rawValue: transferRawValue(item),
-              timestamp: transferTimestamp(item),
-              hash: transferHash(item),
-            }))
-            .filter((item) => item.timestamp >= cutoff),
-        };
+      const cutoff = Date.now() - TRANSFER_LOOKBACK_HOURS * 60 * 60_000;
+      const collected = [];
+      let nextPageParams = null;
+      let page = 0;
+      let reachedCutoff = false;
+      let stoppedByTimeLimit = false;
 
-        return transferCache;
+      do {
+        if (
+          page > 0 &&
+          Date.now() - transferProgress.startedAt >= TRANSFER_INITIAL_MAX_MS
+        ) {
+          stoppedByTimeLimit = true;
+          break;
+        }
+
+        const url = new URL(`${API_BASE}/tokens/${TOKEN}/transfers`);
+        if (nextPageParams && typeof nextPageParams === "object") {
+          for (const [key, value] of Object.entries(nextPageParams)) {
+            if (value !== null && value !== undefined) {
+              url.searchParams.set(key, String(value));
+            }
+          }
+        }
+
+        const data = await fetchJson(url.toString());
+        const items = Array.isArray(data?.items) ? data.items : [];
+        page += 1;
+        transferProgress.pagesFetched = page;
+        transferProgress.transfersFetched += items.length;
+
+        for (const item of items) {
+          const timestamp = transferTimestamp(item);
+          if (timestamp && timestamp < cutoff) {
+            reachedCutoff = true;
+            continue;
+          }
+
+          collected.push({
+            from: transferAddress(item, "from"),
+            to: transferAddress(item, "to"),
+            rawValue: transferRawValue(item),
+            timestamp,
+            hash: transferHash(item),
+          });
+        }
+
+        nextPageParams = data?.next_page_params || null;
+        if (reachedCutoff || items.length === 0) break;
+      } while (nextPageParams && page < TRANSFER_MAX_PAGES);
+
+      transferCache = {
+        generatedAt: Date.now(),
+        source: "Blockscout v2 token transfers",
+        pagesFetched: page,
+        truncated: Boolean(nextPageParams) && !reachedCutoff,
+        partialReason: stoppedByTimeLimit
+          ? "initial time limit"
+          : Boolean(nextPageParams) && !reachedCutoff
+            ? "page limit"
+            : null,
+        items: collected
+          .filter((item) => item.timestamp >= cutoff)
+          .sort((a, b) => b.timestamp - a.timestamp),
+      };
+
+      transferLastSuccessAt = Date.now();
+      return transferCache;
     } catch (error) {
       console.error("Transfer refresh failed:", error);
+      transferLastError = {
+        message: String(error?.message || error || "Unknown transfer error"),
+        status: Number(error?.status || 0) || null,
+        at: Date.now(),
+      };
 
       if (canUseStale(transferCache)) {
-        return withCacheState(
-          transferCache,
-          "stale-fallback",
-          true
-        );
+        return withCacheState(transferCache, "stale-fallback", true);
       }
 
       throw error;
@@ -1117,7 +1177,7 @@ async function enrichActivityRows(groups) {
         .map((row) => String(row.wallet || "").toLowerCase())
         .filter(Boolean)
     ),
-  ].slice(0, 12);
+  ].slice(0, 4);
 
   const classifications = new Map();
 
@@ -1168,7 +1228,7 @@ async function refreshActivityCache(hours) {
   }
 
   const refreshPromise = (async () => {
-
+      activityLastErrors.delete(key);
       const payload = await activityPayload(hours);
 
       const enrich = await enrichActivityRows([
@@ -1218,6 +1278,12 @@ async function refreshActivityCache(hours) {
 
   try {
     return await refreshPromise;
+  } catch (error) {
+    activityLastErrors.set(key, {
+      message: String(error?.message || error || "Unknown activity error"),
+      at: Date.now(),
+    });
+    throw error;
   } finally {
     activityRefreshes.delete(key);
   }
@@ -1393,6 +1459,74 @@ async function whalePayload(limit = 100) {
   };
 }
 
+
+
+app.get("/api/cache-status", (_req, res) => {
+  const state = ({ ready, building, error }) => {
+    if (ready) return "READY";
+    if (building) return "BUILDING";
+    if (error) return "ERROR";
+    return "EMPTY";
+  };
+
+  const a12 = activityCache.get("12");
+  const a24 = activityCache.get("24");
+  const holderReady = Boolean(
+    (topHolderCache?.holders?.length || 0) > 0 ||
+    (fullHolderCache?.holders?.length || 0) > 0
+  );
+  const transferReady = Boolean(transferCache && Array.isArray(transferCache.items));
+
+  res.json({
+    activity12: {
+      state: state({
+        ready: Boolean(a12),
+        building: activityRefreshes.has("12") || Boolean(activityRefreshAllPromise),
+        error: activityLastErrors.get("12"),
+      }),
+      error: activityLastErrors.get("12")?.message || null,
+    },
+    activity24: {
+      state: state({
+        ready: Boolean(a24),
+        building: activityRefreshes.has("24") || Boolean(activityRefreshAllPromise),
+        error: activityLastErrors.get("24"),
+      }),
+      error: activityLastErrors.get("24")?.message || null,
+    },
+    holders: {
+      state: state({
+        ready: holderReady,
+        building: Boolean(topHolderRefresh || fullHolderRefresh),
+      }),
+    },
+    transfers: {
+      state: state({
+        ready: transferReady,
+        building: Boolean(transferRefresh),
+        error: transferLastError,
+      }),
+      error: transferLastError?.message || null,
+      progress: transferRefresh ? transferProgress : null,
+      pagesFetched: transferCache?.pagesFetched || null,
+      truncated: Boolean(transferCache?.truncated),
+      partialReason: transferCache?.partialReason || null,
+      cooldownSeconds: Math.max(
+        0,
+        Math.ceil((blockscoutCooldownUntil - Date.now()) / 1000)
+      ),
+      lastAttemptAt: transferLastAttemptAt,
+      lastSuccessAt: transferLastSuccessAt,
+    },
+    market: {
+      state: state({
+        ready: Boolean(marketCache),
+        building: Boolean(marketRefresh),
+      }),
+    },
+    backgroundWorker: activityBackgroundStarted,
+  });
+});
 
 app.get("/api/activity", async (req, res) => {
   try {

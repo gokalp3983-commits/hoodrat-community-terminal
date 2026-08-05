@@ -310,3 +310,8 @@ All whale analytics and command functionality remain intact.
 - The main terminal keeps the Landing Page master width.
 - The command panel has its own viewport-height scroll area.
 - The main page and command panel now scroll independently.
+
+
+## Blockscout cache protection
+
+The tracker uses the Blockscout v2 token-transfer endpoint with cursor pagination, a shared request queue, 429 cooldown handling, and a bounded cold-start scan. Use the `status` command to view cache readiness and page progress. Environment overrides: `BLOCKSCOUT_MIN_INTERVAL_MS`, `BLOCKSCOUT_MAX_ATTEMPTS`, `BLOCKSCOUT_MAX_BACKOFF_MS`, `TRANSFER_MAX_PAGES`, and `TRANSFER_INITIAL_MAX_MS`.

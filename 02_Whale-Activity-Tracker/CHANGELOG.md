@@ -201,3 +201,13 @@
 - Removed duplicate market data from terminal startup output.
 - Removed the TOKEN section and price/marketcap commands from the HELP sidebar.
 - Preserved all whale analytics, caching, and rate-limit behavior.
+
+## 4.0.3 - Blockscout rate-limit hardening
+
+- Switched recent transfer loading to Blockscout v2 cursor pagination.
+- Added a shared 2-second request queue and global 429 cooldown.
+- Added bounded cold-start transfer scans (30 pages or 120 seconds).
+- Added partial-cache publishing so commands do not warm forever.
+- Reduced unknown-wallet classification pressure during initial builds.
+- Added the `status` command with cache readiness, transfer progress and errors.
+- Improved cache-warming explanations and retained processing feedback.
