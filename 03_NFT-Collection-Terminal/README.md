@@ -148,3 +148,8 @@ OpenSea, mint statistics, whale analytics, wallet lookup, and existing API logic
 - Standardized the footer version block.
 - Preserved: `Collection statistics powered by OpenSea API.`
 - Restored NFT-specific disclaimer and OpenSea link wording.
+
+
+## NFT Sales Tracker
+
+The NFT terminal includes an always-visible, text-only OpenSea sales feed. The server polls the OpenSea collection events endpoint every 90 seconds, caches the latest sales, and exposes them through `/api/nft-sales`. The browser refreshes the panel every 60 seconds and retains the last successful feed if OpenSea is temporarily unavailable. The existing `OPENSEA_API_KEY` Render environment variable is required.

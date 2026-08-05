@@ -1413,3 +1413,97 @@ a:hover,a:focus-visible{
     font-size:.92em !important;
   }
 }
+
+
+/* Always-on OpenSea NFT sales feed */
+.nft-sales-panel{
+  border:1px solid var(--line);
+  padding:14px;
+  margin-bottom:14px;
+  background:rgba(3,16,11,.45);
+}
+
+.sales-intro{
+  margin:0 0 12px;
+  color:var(--muted);
+  font-size:.84em;
+}
+
+.nft-sales-list{
+  display:grid;
+  gap:9px;
+  max-height:430px;
+  overflow:auto;
+  padding-right:4px;
+}
+
+.nft-sale-row{
+  border:1px solid rgba(57,255,20,.18);
+  background:rgba(2,8,6,.72);
+  padding:10px 11px;
+}
+
+.nft-sale-header{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto auto;
+  gap:10px;
+  align-items:baseline;
+  margin-bottom:6px;
+}
+
+.nft-sale-token{ color:var(--yellow); }
+.nft-sale-price{ color:var(--green); }
+.nft-sale-time{ color:var(--muted); font-size:.78em; white-space:nowrap; }
+
+.nft-sale-detail{
+  display:flex;
+  gap:10px;
+  font-size:.82em;
+  line-height:1.45;
+}
+
+.nft-sale-detail span{
+  width:52px;
+  flex:0 0 52px;
+  color:var(--muted);
+}
+
+.nft-sale-detail strong{
+  color:#e8fff0;
+  font-weight:500;
+}
+
+.nft-sale-link{
+  display:inline-block;
+  margin-top:7px;
+  color:var(--cyan);
+  font-size:.84em;
+  text-decoration:none;
+}
+
+.nft-sale-link:hover,
+.nft-sale-link:focus-visible{
+  color:var(--green);
+  text-decoration:underline;
+  outline:none;
+}
+
+.nft-sale-placeholder{
+  color:var(--muted);
+  padding:10px 0;
+}
+
+#nftSalesStatus.stale{ color:var(--orange); }
+#nftSalesStatus.error{ color:var(--red); }
+
+@media(max-width:720px){
+  .nft-sale-header{
+    grid-template-columns:1fr auto;
+  }
+  .nft-sale-time{
+    grid-column:1 / -1;
+  }
+  .nft-sales-list{
+    max-height:520px;
+  }
+}

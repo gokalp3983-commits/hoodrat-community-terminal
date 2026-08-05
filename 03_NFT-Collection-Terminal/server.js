@@ -747,6 +747,250 @@ app.get("/api/collection-stats", async (_req, res) => {
 });
 
 
+const OPENSEA_SALES_CACHE_TTL_MS = 75 * 1000;
+const OPENSEA_SALES_POLL_MS = 90 * 1000;
+const OPENSEA_SALES_LIMIT = 15;
+const OPENSEA_COLLECTION_URL =
+  "https://opensea.io/collection/hoodrats-nft/overview";
+
+let openSeaSalesCache = null;
+let openSeaSalesPromise = null;
+
+function normalizeOpenSeaAddress(value) {
+  if (!value) return null;
+  if (typeof value === "string") return value;
+  return value.address || value.hash || null;
+}
+
+function normalizeOpenSeaTimestamp(value) {
+  if (value == null) return null;
+  const numeric = Number(value);
+  const date = Number.isFinite(numeric)
+    ? new Date(numeric > 1e12 ? numeric : numeric * 1000)
+    : new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date.toISOString();
+}
+
+function normalizeOpenSeaPayment(payment) {
+  if (!payment) return { amount: null, symbol: null };
+
+  const decimals = Number(payment.decimals ?? payment.token?.decimals ?? 18);
+  const quantity = payment.quantity ?? payment.amount ?? payment.value ?? null;
+  const symbol = String(
+    payment.symbol ?? payment.token?.symbol ?? payment.payment_token?.symbol ?? ""
+  ).trim() || null;
+
+  let amount = null;
+  if (quantity != null) {
+    const raw = Number(quantity);
+    if (Number.isFinite(raw)) {
+      amount = raw / (10 ** (Number.isFinite(decimals) ? decimals : 18));
+    }
+  }
+
+  if (amount == null) {
+    amount = firstFiniteNumber(
+      payment.eth_price,
+      payment.native_price,
+      payment.amount_decimal
+    );
+  }
+
+  return { amount, symbol };
+}
+
+function buildOpenSeaItemUrl(event, tokenId) {
+  const supplied =
+    event?.nft?.opensea_url ??
+    event?.nft?.permalink ??
+    event?.asset?.permalink ??
+    event?.permalink ??
+    null;
+
+  if (supplied) return String(supplied);
+
+  const chain = String(event?.chain ?? event?.nft?.chain ?? "").trim();
+  const contract = String(
+    event?.nft?.contract ??
+    event?.asset_contract?.address ??
+    event?.contract_address ??
+    NFT_CONTRACT
+  ).trim();
+
+  if (chain && contract && tokenId != null) {
+    return `https://opensea.io/assets/${encodeURIComponent(chain)}/${encodeURIComponent(contract)}/${encodeURIComponent(tokenId)}`;
+  }
+
+  return OPENSEA_COLLECTION_URL;
+}
+
+function normalizeOpenSeaSale(event) {
+  const tokenId =
+    event?.nft?.identifier ??
+    event?.asset?.token_id ??
+    event?.token_id ??
+    event?.identifier ??
+    null;
+
+  const payment = normalizeOpenSeaPayment(
+    event?.payment ?? event?.payment_token ?? event?.sale_price
+  );
+
+  const txHash = String(
+    event?.transaction ??
+    event?.transaction_hash ??
+    event?.transaction?.hash ??
+    ""
+  ).trim() || null;
+
+  return {
+    id: String(
+      event?.event_id ??
+      event?.id ??
+      `${txHash || "sale"}:${tokenId || "unknown"}`
+    ),
+    tokenId: tokenId == null ? null : String(tokenId),
+    price: payment.amount,
+    priceDisplay:
+      payment.amount == null
+        ? "Price unavailable"
+        : `${formatEthValue(payment.amount)} ${payment.symbol || "ETH"}`,
+    paymentSymbol: payment.symbol || null,
+    buyer: normalizeOpenSeaAddress(event?.buyer ?? event?.to_account),
+    seller: normalizeOpenSeaAddress(event?.seller ?? event?.from_account),
+    transactionHash: txHash,
+    occurredAt: normalizeOpenSeaTimestamp(
+      event?.event_timestamp ?? event?.created_date ?? event?.timestamp
+    ),
+    openSeaUrl: buildOpenSeaItemUrl(event, tokenId),
+  };
+}
+
+async function loadOpenSeaSales() {
+  if (!OPENSEA_API_KEY) {
+    return {
+      connected: false,
+      requiresApiKey: true,
+      sales: [],
+      updatedAt: null,
+      source: "OpenSea",
+    };
+  }
+
+  const url = new URL(
+    `https://api.opensea.io/api/v2/events/collection/${OPENSEA_COLLECTION_SLUG}`
+  );
+  url.searchParams.set("event_type", "sale");
+  url.searchParams.set("limit", String(OPENSEA_SALES_LIMIT));
+
+  const response = await fetch(url, {
+    headers: {
+      Accept: "application/json",
+      "X-API-KEY": OPENSEA_API_KEY,
+      "User-Agent": "HOODRATS-NFT-Sales-Tracker/1.0",
+    },
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+  });
+
+  if (!response.ok) {
+    throw new Error(`OpenSea sales request failed: HTTP ${response.status}`);
+  }
+
+  const payload = await response.json();
+  const events = Array.isArray(payload?.asset_events)
+    ? payload.asset_events
+    : Array.isArray(payload?.events)
+      ? payload.events
+      : [];
+
+  const seen = new Set();
+  const sales = events
+    .filter((event) => String(event?.event_type ?? "sale").toLowerCase() === "sale")
+    .map(normalizeOpenSeaSale)
+    .filter((sale) => {
+      if (seen.has(sale.id)) return false;
+      seen.add(sale.id);
+      return true;
+    })
+    .sort((a, b) => new Date(b.occurredAt || 0) - new Date(a.occurredAt || 0))
+    .slice(0, 12);
+
+  return {
+    connected: true,
+    requiresApiKey: false,
+    sales,
+    updatedAt: new Date().toISOString(),
+    source: "OpenSea",
+  };
+}
+
+async function getOpenSeaSales({ force = false } = {}) {
+  if (
+    !force &&
+    openSeaSalesCache &&
+    Date.now() - openSeaSalesCache.fetchedAt < OPENSEA_SALES_CACHE_TTL_MS
+  ) {
+    return {
+      ...openSeaSalesCache.data,
+      cacheAgeSeconds: Math.floor(
+        (Date.now() - openSeaSalesCache.fetchedAt) / 1000
+      ),
+    };
+  }
+
+  if (openSeaSalesPromise) return openSeaSalesPromise;
+
+  openSeaSalesPromise = (async () => {
+    try {
+      const data = await loadOpenSeaSales();
+      openSeaSalesCache = { fetchedAt: Date.now(), data };
+      return { ...data, cacheAgeSeconds: 0 };
+    } finally {
+      openSeaSalesPromise = null;
+    }
+  })();
+
+  return openSeaSalesPromise;
+}
+
+app.get("/api/nft-sales", async (_req, res) => {
+  try {
+    res.json(await getOpenSeaSales());
+  } catch (error) {
+    console.error("[nft-sales] failed:", error);
+
+    if (openSeaSalesCache?.data) {
+      res.json({
+        ...openSeaSalesCache.data,
+        stale: true,
+        error: "OpenSea refresh failed; serving the last successful sales feed.",
+      });
+      return;
+    }
+
+    res.status(502).json({
+      connected: false,
+      requiresApiKey: !OPENSEA_API_KEY,
+      sales: [],
+      updatedAt: null,
+      source: "OpenSea",
+      error: "Unable to load recent OpenSea sales.",
+    });
+  }
+});
+
+async function refreshOpenSeaSalesInBackground() {
+  try {
+    await getOpenSeaSales({ force: true });
+  } catch (error) {
+    console.error("[nft-sales] background refresh failed:", error);
+  }
+}
+
+setTimeout(refreshOpenSeaSalesInBackground, 1500);
+setInterval(refreshOpenSeaSalesInBackground, OPENSEA_SALES_POLL_MS);
+
+
 const NFT_HOLDERS_CACHE_TTL_MS = 2 * 60 * 1000;
 const NFT_WHALE_TOKEN_CACHE_TTL_MS = 5 * 60 * 1000;
 const NFT_WHALE_TOKEN_REQUEST_DELAY_MS = 350;

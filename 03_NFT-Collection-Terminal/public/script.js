@@ -55,6 +55,12 @@ const elements = {
     document.getElementById("openSeaKeyNote"),
   collectionUpdated:
     document.getElementById("collectionUpdated"),
+  nftSalesStatus:
+    document.getElementById("nftSalesStatus"),
+  nftSalesUpdated:
+    document.getElementById("nftSalesUpdated"),
+  nftSalesRows:
+    document.getElementById("nftSalesRows"),
   nftWhalesStatus:
     document.getElementById("nftWhalesStatus"),
   nftWhalesUpdated:
@@ -399,6 +405,137 @@ async function refreshCollectionStats(){
   }
 }
 
+
+const NFT_SALES_REFRESH_MS = 60_000;
+let hasNftSalesData = false;
+
+function shortSaleAddress(address){
+  const value = String(address || "");
+  if(!/^0x[a-fA-F0-9]{40}$/.test(value)) return "UNAVAILABLE";
+  return `${value.slice(0, 6)}...${value.slice(-4)}`;
+}
+
+function relativeSaleTime(value){
+  const timestamp = new Date(value).getTime();
+  if(!Number.isFinite(timestamp)) return "time unavailable";
+
+  const seconds = Math.max(0, Math.floor((Date.now() - timestamp) / 1000));
+  if(seconds < 60) return `${seconds}s ago`;
+  const minutes = Math.floor(seconds / 60);
+  if(minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if(hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
+}
+
+function setNftSalesStatus(text, state = ""){
+  elements.nftSalesStatus.textContent = text;
+  elements.nftSalesStatus.classList.toggle("live", state === "live");
+  elements.nftSalesStatus.classList.toggle("stale", state === "stale");
+  elements.nftSalesStatus.classList.toggle("error", state === "error");
+}
+
+function createSaleText(label, value, className = ""){
+  const row = document.createElement("div");
+  row.className = "nft-sale-detail";
+  const key = document.createElement("span");
+  key.textContent = label;
+  const data = document.createElement("strong");
+  data.textContent = value;
+  if(className) data.className = className;
+  row.append(key, data);
+  return row;
+}
+
+function renderNftSales(data){
+  const sales = Array.isArray(data?.sales) ? data.sales : [];
+  elements.nftSalesRows.replaceChildren();
+
+  if(!data?.connected){
+    const note = document.createElement("div");
+    note.className = "nft-sale-placeholder";
+    note.textContent = data?.requiresApiKey
+      ? "Waiting for the OpenSea API connection."
+      : "Recent OpenSea sales are temporarily unavailable.";
+    elements.nftSalesRows.appendChild(note);
+    setNftSalesStatus("UNAVAILABLE", "error");
+    return;
+  }
+
+  if(!sales.length){
+    const note = document.createElement("div");
+    note.className = "nft-sale-placeholder";
+    note.textContent = "No recent OpenSea sales were returned for this collection.";
+    elements.nftSalesRows.appendChild(note);
+  }else{
+    for(const sale of sales){
+      const article = document.createElement("article");
+      article.className = "nft-sale-row";
+
+      const header = document.createElement("div");
+      header.className = "nft-sale-header";
+
+      const token = document.createElement("strong");
+      token.className = "nft-sale-token";
+      token.textContent = sale.tokenId ? `HOODRAT #${sale.tokenId}` : "HOODRAT NFT";
+
+      const price = document.createElement("strong");
+      price.className = "nft-sale-price";
+      price.textContent = sale.priceDisplay || "Price unavailable";
+
+      const time = document.createElement("span");
+      time.className = "nft-sale-time";
+      time.textContent = relativeSaleTime(sale.occurredAt);
+
+      header.append(token, price, time);
+      article.appendChild(header);
+      article.appendChild(createSaleText("Buyer", shortSaleAddress(sale.buyer)));
+      article.appendChild(createSaleText("Seller", shortSaleAddress(sale.seller)));
+
+      const link = document.createElement("a");
+      link.className = "nft-sale-link";
+      link.href = sale.openSeaUrl || "https://opensea.io/collection/hoodrats-nft/overview";
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.textContent = "View sale on OpenSea →";
+      article.appendChild(link);
+
+      elements.nftSalesRows.appendChild(article);
+    }
+  }
+
+  elements.nftSalesUpdated.textContent = data.updatedAt
+    ? `Updated ${formatMarketTime(new Date(data.updatedAt))}`
+    : "Updated —";
+
+  setNftSalesStatus(data.stale ? "STALE" : "LIVE", data.stale ? "stale" : "live");
+  hasNftSalesData = true;
+}
+
+async function refreshNftSales(){
+  setNftSalesStatus(hasNftSalesData ? "UPDATING" : "CONNECTING");
+
+  try{
+    const response = await fetch("/api/nft-sales", {
+      headers: { Accept: "application/json" },
+    });
+    const data = await response.json();
+
+    if(!response.ok && !data?.sales?.length){
+      throw new Error(data?.error || `HTTP ${response.status}`);
+    }
+
+    renderNftSales(data);
+  }catch(error){
+    if(!hasNftSalesData){
+      elements.nftSalesRows.innerHTML =
+        '<div class="nft-sale-placeholder">Unable to load recent OpenSea sales.</div>';
+    }
+    setNftSalesStatus(hasNftSalesData ? "STALE" : "ERROR", hasNftSalesData ? "stale" : "error");
+  }
+}
+
 const NFT_WHALES_REFRESH_MS = 2 * 60 * 1000;
 let nftWhaleSnapshot = null;
 
@@ -715,6 +852,12 @@ refreshMintStats();
 setInterval(
   refreshMintStats,
   MINT_STATS_REFRESH_MS
+);
+
+refreshNftSales();
+setInterval(
+  refreshNftSales,
+  NFT_SALES_REFRESH_MS
 );
 
 refreshNftWhales();
