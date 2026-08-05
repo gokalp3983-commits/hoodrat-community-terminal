@@ -6,6 +6,7 @@ Terminal-style launcher for HOODRAT Projects.
 
 - `holders` — NFT Eligibility Checker
 - `whales` — Whale Activity Tracker
+- `intel` — Meme Intelligence Terminal
 - `about` — About HOODRAT Projects
 - `clear` — Clear terminal output
 
@@ -83,6 +84,8 @@ Development branding keeps UI at v1.0 until public Railway release.
   `https://hoodrat-holder-checker.onrender.com/`
 - Whale Activity Tracker:
   `https://whale-activity-tracker-xnj8.onrender.com/`
+- Meme Intelligence Terminal:
+  `https://zero5-meme-intel.onrender.com/`
 
 Startup and card statuses use `READY` and `COMING SOON`.
 
@@ -223,3 +226,21 @@ The landing-page module cards now reflect their current lifecycle state:
 - `eligibility` — `[ ARCHIVE ]`
 
 All v1.4.2 spacing, lowercase `help`, footer readability, and master-shell fixes are preserved.
+
+
+## Meme Intelligence Terminal
+
+- Added the visible `intel` command and module card.
+- `intel` opens `https://zero5-meme-intel.onrender.com/` in a new tab.
+- Added the module to startup status, `help`, and the canonical card order.
+- The landing page now displays four modules in a balanced 2×2 grid.
+
+
+## Module order update
+
+The landing page presents modules in this order:
+
+1. `whales` — Whale Activity Tracker
+2. `intel` — Meme Intelligence Terminal
+3. `nft` — HOODRATS NFT Collection Terminal
+4. `eligibility` — NFT Eligibility Checker Archive

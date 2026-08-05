@@ -501,12 +501,16 @@ h2{
   order:1;
 }
 
-.terminal-modules [data-module="nft"]{
+.terminal-modules [data-module="intel"]{
   order:2;
 }
 
-.terminal-modules [data-module="eligibility"]{
+.terminal-modules [data-module="nft"]{
   order:3;
+}
+
+.terminal-modules [data-module="eligibility"]{
+  order:4;
 }
 
 

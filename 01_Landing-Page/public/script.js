@@ -7,6 +7,10 @@ const MODULES = {
     title: "Whale Activity Tracker",
     url: "https://whale-activity-tracker-xnj8.onrender.com/",
   },
+  intel: {
+    title: "Meme Intelligence Terminal",
+    url: "https://zero5-meme-intel.onrender.com/",
+  },
   nft: {
     title: "HOODRATS NFT Collection Terminal",
     url: "https://nft-mint-tracker-z76h.onrender.com/",
@@ -135,9 +139,10 @@ async function bootSequence(){
     ["Loading project registry...", 280],
     ["Loading available project modules...", 320],
     ["", 120],
-    ['[ <span class="green">READY</span> ] NFT Eligibility Checker', 240],
     ['[ <span class="green">READY</span> ] Whale Activity Tracker', 260],
+    ['[ <span class="green">READY</span> ] Meme Intelligence Terminal', 250],
     ['[ <span class="green">COMPLETE</span> ] HOODRATS NFT Collection Terminal', 240],
+    ['[ <span class="yellow">ARCHIVE</span> ] NFT Eligibility Checker Archive', 240],
     ["", 120],
     [
       '[ <span class="green">READY</span> ] ' +
@@ -170,9 +175,10 @@ function showHelp(){
   };
 
   write(output,'<span class="yellow">Available modules</span>');
-  line("eligibility","NFT Eligibility Checker");
   line("whales","Whale Activity Tracker");
+  line("intel","Meme Intelligence Terminal");
   line("nft","HOODRATS NFT Collection Terminal");
+  line("eligibility","NFT Eligibility Checker Archive");
   line("about","About HOODRAT Community Terminal");
   line("clear","Clear terminal output");
 }
@@ -225,6 +231,8 @@ async function execute(raw){
     await launchModule("eligibility");
   }else if(lower === "whales"){
     await launchModule("whales");
+  }else if(lower === "intel" || lower === "intelligence"){
+    await launchModule("intel");
   }else if(lower === "nft" || lower === "mint"){
     await launchModule("nft");
   }else if(lower === "about"){
