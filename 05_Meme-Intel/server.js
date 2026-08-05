@@ -42,7 +42,8 @@ const BLOCKSCOUT_MAX_BACKOFF_MS = Number(process.env.BLOCKSCOUT_MAX_BACKOFF_MS |
 const ADDRESS_CLASSIFICATION_TTL = 10 * 60_000;
 const MAX_STALE_AGE = 60 * 60_000;
 const TRANSFER_LOOKBACK_HOURS = 24;
-const TRANSFER_MAX_PAGES = Number(process.env.TRANSFER_MAX_PAGES || 120);
+const TRANSFER_MAX_PAGES = Number(process.env.TRANSFER_MAX_PAGES || 30);
+const TRANSFER_INITIAL_MAX_MS = Number(process.env.TRANSFER_INITIAL_MAX_MS || 120_000);
 
 let topHolderCache = null;
 let fullHolderCache = null;
@@ -592,8 +593,13 @@ async function loadRecentTokenTransfers() {
       let nextPageParams = null;
       let page = 0;
       let reachedCutoff = false;
+      let stoppedByTimeLimit = false;
 
       do {
+        if (page > 0 && Date.now() - transferProgress.startedAt >= TRANSFER_INITIAL_MAX_MS) {
+          stoppedByTimeLimit = true;
+          break;
+        }
         const url = new URL(`${API_BASE}/tokens/${TOKEN}/transfers`);
         if (nextPageParams && typeof nextPageParams === "object") {
           for (const [key, value] of Object.entries(nextPageParams)) {
@@ -637,6 +643,9 @@ async function loadRecentTokenTransfers() {
         source: "Blockscout v2 token transfers",
         pagesFetched: page,
         truncated: Boolean(nextPageParams) && !reachedCutoff,
+        partialReason: stoppedByTimeLimit
+          ? "initial time limit"
+          : (Boolean(nextPageParams) && !reachedCutoff ? "page limit" : null),
         items: collected
           .filter((item) => item.timestamp >= cutoff)
           .sort((a, b) => b.timestamp - a.timestamp),
@@ -1156,7 +1165,7 @@ async function enrichActivityRows(groups) {
         .map((row) => String(row.wallet || "").toLowerCase())
         .filter(Boolean)
     ),
-  ].slice(0, 12);
+  ].slice(0, 4);
 
   const classifications = new Map();
 
