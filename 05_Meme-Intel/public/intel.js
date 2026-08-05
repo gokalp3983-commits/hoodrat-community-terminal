@@ -164,4 +164,5 @@ input.addEventListener("keydown",e=>{ if(e.key==="Enter"){run(input.value);} els
 document.querySelectorAll("[data-command]").forEach(b=>b.addEventListener("click",()=>{input.value=b.dataset.command;input.focus();}));
 
 boot.innerHTML=`<div class="boot-line">[ SYSTEM ] HOODRAT Meme Intelligence Terminal ver 1.0</div><div class="boot-line">[ READY ] Type <strong>help</strong> to inspect available intelligence commands.</div>`;
+promptRow.classList.add("visible");
 marketHeader(); setInterval(marketHeader,60000); input.focus();
