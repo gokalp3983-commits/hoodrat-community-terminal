@@ -1,0 +1,16 @@
+{
+  "name": "hoodrats-nft-collection-terminal",
+  "version": "2.4.2",
+  "private": true,
+  "description": "HOODRAT NFT Collection Terminal using the Landing Page master shell.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}

@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#020704">
+  <meta
+    name="description"
+    content="HOODRAT Community Terminal v1 v1 — terminal-style tools for the HOODRAT community."
+  >
+  <title>HOODRAT Community Terminal v1 v1</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <main id="terminal-frame" class="shell terminal-frame">
+    <section class="terminal" aria-label="HOODRAT Community Terminal">
+      <div id="terminal-header" class="terminal-area terminal-header">
+        <header class="header community-header">
+<a
+  href="https://hoodrat-landing-page.onrender.com/"
+  title="Return to HOODRAT Community Terminal"
+>
+  <img
+    class="mascot community-mascot"
+    src="/assets/hoodrat-mascot.jpeg"
+    alt="HOODRAT mascot"
+  >
+</a>
+
+        <div class="community-divider" aria-hidden="true">
+          ══════════════════════════════════════════════════════
+        </div>
+
+        <div class="community-title-row">
+          <h1>HOODRAT COMMUNITY TERMINAL</h1>
+          <span class="online-status">
+            <span class="online-dot" aria-hidden="true">●</span>
+            ONLINE
+          </span>
+        </div>
+
+        <p class="community-subtitle">
+          Independent Community Tools
+          <span aria-hidden="true">•</span>
+          Robinhood Chain Ecosystem
+        </p>
+
+        <div class="community-divider" aria-hidden="true">
+          ══════════════════════════════════════════════════════
+        </div>
+      </header>
+      </div>
+
+      <div id="terminal-live-panel" class="terminal-area terminal-live-panel">
+        <section id="marketPanel" class="market-panel" aria-label="Live HOODRAT market data">
+        <div class="market-line">
+          <span id="marketPriceStatus" class="market-tag">[ CONNECTING ]</span>
+          <span class="market-label">Price</span>
+          <span class="market-colon" aria-hidden="true">:</span>
+          <strong id="marketPrice" class="market-value">—</strong>
+        </div>
+        <div class="market-line">
+          <span id="marketCapStatus" class="market-tag">[ CONNECTING ]</span>
+          <span class="market-label">Market Cap</span>
+          <span class="market-colon" aria-hidden="true">:</span>
+          <strong id="marketCap" class="market-value">—</strong>
+        </div>
+        <div class="market-line">
+          <span id="marketHoldersStatus" class="market-tag">[ CONNECTING ]</span>
+          <span class="market-label">Holders</span>
+          <span class="market-colon" aria-hidden="true">:</span>
+          <strong id="marketHolders" class="market-value">—</strong>
+        </div>
+        <div class="market-line">
+          <span id="marketVolumeStatus" class="market-tag">[ CONNECTING ]</span>
+          <span class="market-label">24h Volume</span>
+          <span class="market-colon" aria-hidden="true">:</span>
+          <strong id="marketVolume" class="market-value">—</strong>
+        </div>
+        <div class="market-line market-updated-line">
+          <span id="marketUpdatedStatus" class="market-tag">[ CONNECTING ]</span>
+          <span class="market-label">Updated</span>
+          <span class="market-colon" aria-hidden="true">:</span>
+          <strong id="marketUpdated" class="market-value">—</strong>
+        </div>
+      </section>
+      </div>
+
+      <div id="terminal-application" class="terminal-area terminal-application">
+        <div id="terminal-output-area" class="application-area terminal-output-area">
+          <div id="boot" class="boot" aria-live="polite"></div>
+          <div id="output" class="output" aria-live="polite"></div>
+        </div>
+
+        <div id="terminal-modules" class="application-area terminal-modules">
+          <section class="modules" aria-label="Available modules">
+<button class="module" type="button" data-module="whales">
+          <div class="module-command">&gt; whales</div>
+          <div class="module-title">Whale Activity Tracker</div>
+          <div class="module-copy">
+            Monitor Top-30 whales, DEX activity, and holder rankings.
+          </div>
+          <span class="module-status">[ READY ]</span>
+        </button>
+
+<button class="module live" type="button" data-module="nft">
+          <div class="module-command">&gt; nft</div>
+          <div class="module-title">HOODRAT NFT Collection Terminal</div>
+          <div class="module-copy">
+            Completed mint record, NFT whale analytics, and collection statistics.
+          </div>
+          <span class="module-status live-status">[ COMPLETE ]</span>
+        </button>
+
+<button class="module" type="button" data-module="eligibility">
+          <div class="module-command">&gt; eligibility</div>
+          <div class="module-title">NFT Eligibility Archive</div>
+          <div class="module-copy">
+            Check wallet eligibility, holder rank, and mint qualification.
+          </div>
+          <span class="module-status">[ ARCHIVE ]</span>
+        </button>
+      </section>
+        </div>
+      </div>
+
+      <div id="terminal-prompt" class="terminal-area terminal-prompt">
+        <form id="terminalForm">
+        <div id="promptRow" class="prompt" hidden>
+          <label class="prompt-label" for="commandInput">
+            hoodrat@projects:~$
+          </label>
+          <input
+            id="commandInput"
+            name="command"
+            type="text"
+            autocomplete="off"
+            autocapitalize="none"
+            spellcheck="false"
+            aria-label="Terminal command"
+          >
+        </div>
+      </form>
+      </div>
+
+      <div id="terminal-footer" class="terminal-area terminal-footer">
+        <div class="footer-version">
+        HOODRAT Community Terminal ver 2.2.1
+      </div>
+        <footer class="footer">
+        Independent community-built tools.<br>
+        Not affiliated with or endorsed by the official $HOODRAT team.<br>
+        Built for the Robinhood Chain $HOODRAT ecosystem.
+      </footer>
+      </div>
+    </section>
+  </main>
+
+  <script src="/script.js"></script>
+</body>
+</html>

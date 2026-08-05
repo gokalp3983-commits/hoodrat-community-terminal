@@ -1,0 +1,16 @@
+{
+  "name": "whale-activity-tracker",
+  "version": "4.0.2",
+  "private": true,
+  "description": "HOODRAT Whale Activity Tracker with centered split view and independently scrollable command panel.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}

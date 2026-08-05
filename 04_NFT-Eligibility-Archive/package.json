@@ -1,0 +1,16 @@
+{
+  "name": "hoodrats-nft-collection-terminal",
+  "version": "4.0.2",
+  "private": true,
+  "description": "HOODRAT NFT Eligibility Archive with Landing Page market backend.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}

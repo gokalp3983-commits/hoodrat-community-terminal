@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#020704">
+  <meta
+    name="description"
+    content="HOODRAT NFT Collection Terminal."
+  >
+  <title>HOODRAT NFT Collection Terminal</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <main id="terminal-frame" class="shell terminal-frame">
+    <section class="terminal" aria-label="HOODRAT NFT Collection Terminal">
+      <div id="terminal-header" class="terminal-area terminal-header">
+        <header class="header community-header">
+<a
+  href="https://hoodrat-landing-page.onrender.com/"
+  title="Return to HOODRAT Community Terminal"
+>
+  <img
+    class="mascot community-mascot"
+    src="/assets/hoodrat-mascot.jpeg"
+    alt="HOODRAT mascot"
+  >
+</a>
+
+        <div class="community-divider" aria-hidden="true">
+          ══════════════════════════════════════════════════════
+        </div>
+
+        <div class="community-title-row">
+          <h1>HOODRAT COMMUNITY TERMINAL</h1>
+          <span class="online-status">
+            <span class="online-dot" aria-hidden="true">●</span>
+            ONLINE
+          </span>
+        </div>
+
+        <p class="community-subtitle">
+          Independent Community Tools
+          <span aria-hidden="true">•</span>
+          Robinhood Chain Ecosystem
+        </p>
+
+        <div class="community-divider" aria-hidden="true">
+          ══════════════════════════════════════════════════════
+        </div>
+      </header>
+      </div>
+
+      <div id="terminal-live-panel" class="terminal-area terminal-live-panel">
+        <section id="marketPanel" class="market-panel" aria-label="Live HOODRAT market data">
+        <div class="market-line">
+          <span id="marketPriceStatus" class="market-tag">[ CONNECTING ]</span>
+          <span class="market-label">Price</span>
+          <span class="market-colon" aria-hidden="true">:</span>
+          <strong id="marketPrice" class="market-value">—</strong>
+        </div>
+        <div class="market-line">
+          <span id="marketCapStatus" class="market-tag">[ CONNECTING ]</span>
+          <span class="market-label">Market Cap</span>
+          <span class="market-colon" aria-hidden="true">:</span>
+          <strong id="marketCap" class="market-value">—</strong>
+        </div>
+        <div class="market-line">
+          <span id="marketHoldersStatus" class="market-tag">[ CONNECTING ]</span>
+          <span class="market-label">Holders</span>
+          <span class="market-colon" aria-hidden="true">:</span>
+          <strong id="marketHolders" class="market-value">—</strong>
+        </div>
+        <div class="market-line">
+          <span id="marketVolumeStatus" class="market-tag">[ CONNECTING ]</span>
+          <span class="market-label">24h Volume</span>
+          <span class="market-colon" aria-hidden="true">:</span>
+          <strong id="marketVolume" class="market-value">—</strong>
+        </div>
+        <div class="market-line market-updated-line">
+          <span id="marketUpdatedStatus" class="market-tag">[ CONNECTING ]</span>
+          <span class="market-label">Updated</span>
+          <span class="market-colon" aria-hidden="true">:</span>
+          <strong id="marketUpdated" class="market-value">—</strong>
+        </div>
+      </section>
+      </div>
+
+      <div id="terminal-application" class="terminal-area terminal-application">
+        <section class="official-mint" aria-label="Official HOODRATS NFT mint">
+        <span class="official-mint-label">[ OPENSEA ]</span>
+        <a
+          href="https://opensea.io/collection/hoodrats-nft/overview"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          View HOODRAT NFT Collection on OpenSea
+        </a>
+      </section>
+
+      <section id="boot" class="boot" aria-live="polite"></section>
+
+      <section class="tracking-note mint-complete-note">
+        <span class="green">[ COMPLETE ]</span>
+        The HOODRATS NFT mint has completed.
+        Final on-chain mint statistics are shown below.
+      </section>
+
+      <section class="mint-dashboard" aria-label="Live mint statistics">
+        <div class="dashboard-header">
+          <h3>Final Mint Record</h3>
+          <span id="dataConnection" class="data-status live">COMPLETE</span>
+        </div>
+
+        <div class="progress-block">
+          <div class="progress-labels">
+            <span>Mint Progress</span>
+            <strong id="progressPercent">—</strong>
+          </div>
+          <div class="progress-track" aria-label="Mint progress">
+            <div id="progressFill" class="progress-fill" style="width:0%"></div>
+          </div>
+        </div>
+
+        <div class="metrics">
+          <article class="metric">
+            <div class="metric-label">Mint Status</div>
+            <div id="mintStatus" class="metric-value status-waiting">
+              WAITING
+            </div>
+          </article>
+
+          <article class="metric">
+            <div class="metric-label">Minted</div>
+            <div id="mintedCount" class="metric-value">— / 2,222</div>
+          </article>
+
+          <article class="metric">
+            <div class="metric-label">Remaining</div>
+            <div id="remainingCount" class="metric-value">—</div>
+          </article>
+
+          <article class="metric">
+            <div class="metric-label">Unique Holders</div>
+            <div id="uniqueMinters" class="metric-value">—</div>
+          </article>
+
+          <article class="metric">
+            <div class="metric-label">Mint Rate</div>
+            <div id="mintRate" class="metric-value">— NFT/min</div>
+          </article>
+
+          <article class="metric">
+            <div class="metric-label">Latest Mint</div>
+            <div id="latestMint" class="metric-value compact-value">—</div>
+          </article>
+        </div>
+      </section>
+
+
+      <section class="collection-market">
+        <div class="dashboard-header">
+          <h3>OpenSea Collection Market</h3>
+          <div class="collection-status-wrap">
+            <span id="collectionDataStatus" class="data-status">
+              CONNECTING
+            </span>
+            <span id="collectionUpdated" class="collection-updated">
+              Updated —
+            </span>
+          </div>
+        </div>
+
+        <div class="metrics collection-metrics">
+          <article class="metric">
+            <div class="metric-label">Floor Price</div>
+            <div id="floorPrice" class="metric-value">—</div>
+          </article>
+
+          <article class="metric">
+            <div class="metric-label">Total Volume</div>
+            <div id="totalVolume" class="metric-value">—</div>
+          </article>
+
+          <article class="metric">
+            <div class="metric-label">Owners</div>
+            <div id="collectionOwners" class="metric-value">—</div>
+          </article>
+
+          <article class="metric">
+            <div class="metric-label">Sales</div>
+            <div id="collectionSales" class="metric-value">—</div>
+          </article>
+
+          <article class="metric">
+            <div class="metric-label">Listed</div>
+            <div id="collectionListed" class="metric-value">—</div>
+          </article>
+
+          <article class="metric">
+            <div class="metric-label">Marketplace</div>
+            <div class="metric-value compact-value">
+              <a
+                href="https://opensea.io/collection/hoodrats-nft/overview"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                OpenSea →
+              </a>
+            </div>
+          </article>
+        </div>
+
+        <div id="openSeaKeyNote" class="api-note" hidden>
+          Waiting for OpenSea marketplace data.
+        </div>
+      </section>
+
+
+      <section class="nft-whales-panel">
+        <div class="dashboard-header">
+          <h3>NFT Whale Analytics</h3>
+          <div class="collection-status-wrap">
+            <span id="nftWhalesStatus" class="data-status">
+              CONNECTING
+            </span>
+            <span id="nftWhalesUpdated" class="collection-updated">
+              Updated —
+            </span>
+          </div>
+        </div>
+
+        <div class="metrics whale-summary">
+          <article class="metric">
+            <div class="metric-label">NFT Whales (10+)</div>
+            <div id="nftWhaleCount" class="metric-value">—</div>
+          </article>
+          <article class="metric">
+            <div class="metric-label">Largest Holder</div>
+            <div id="largestNftHolder" class="metric-value">—</div>
+          </article>
+          <article class="metric">
+            <div class="metric-label">Top-10 Concentration</div>
+            <div id="top10Concentration" class="metric-value">—</div>
+          </article>
+        </div>
+
+        <div class="whale-grid">
+          <div class="whale-column">
+            <h4>Top 25 NFT Holders</h4>
+            <div class="whale-table-wrap">
+              <table class="whale-table">
+                <thead>
+                  <tr>
+                    <th>Rank</th>
+                    <th>Wallet</th>
+                    <th>NFTs</th>
+                    <th>NFT Share</th>
+                    <th>HOODRAT Tokens</th>
+                  </tr>
+                </thead>
+                <tbody id="nftWhaleRows">
+                  <tr><td colspan="5">Loading holder rankings...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="whale-column">
+            <h4>Ownership Distribution</h4>
+            <div id="nftDistribution" class="distribution-list"></div>
+
+            <h4 class="lookup-title">Wallet Lookup</h4>
+            <form id="nftWalletForm" class="wallet-lookup">
+              <input
+                id="nftWalletInput"
+                type="text"
+                placeholder="0x wallet address"
+                autocomplete="off"
+                spellcheck="false"
+                aria-label="NFT holder wallet address"
+              >
+              <button type="submit">CHECK</button>
+            </form>
+            <div id="nftWalletResult" class="wallet-result">
+              Enter a wallet to check its NFT rank.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="launch-panel">
+        <h3>Collection Information</h3>
+
+        <div class="info-row">
+          <span>Collection</span>
+          <strong>HOODRATS NFT</strong>
+        </div>
+
+        <div class="info-row">
+          <span>Chain</span>
+          <strong>Robinhood Chain</strong>
+        </div>
+
+        <div class="info-row">
+          <span>NFT Contract</span>
+          <a
+            href="https://robinhoodchain.blockscout.com/address/0xc06a2fa2dc084017e5c06a1ed0941042ab363784"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            0xc06a2fa2dc084017e5c06a1ed0941042ab363784
+          </a>
+        </div>
+
+        <div class="info-row">
+          <span>OpenSea Collection</span>
+          <a
+            href="https://opensea.io/collection/hoodrats-nft/overview"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            OpenSea
+          </a>
+        </div>
+      </section>
+      </div>
+
+      <div id="terminal-prompt" class="terminal-area terminal-prompt">
+        <form id="terminalForm">
+        <div id="promptRow" class="prompt" hidden>
+          <label class="prompt-label" for="commandInput">
+            hoodrat@collection:~$
+          </label>
+          <input
+            id="commandInput"
+            name="command"
+            type="text"
+            autocomplete="off"
+            autocapitalize="none"
+            spellcheck="false"
+            aria-label="Terminal command"
+          >
+        </div>
+      </form>
+      </div>
+
+      <div id="terminal-footer" class="terminal-area terminal-footer">
+        <div class="footer-version">
+          HOODRAT Community Terminal ver 2.2.1
+        </div>
+
+        <div class="powered-by">
+          <span class="orange">[ INFO ]</span>
+          Collection statistics powered by OpenSea API.
+        </div>
+
+        <footer class="footer">
+          Independent community-built tool.<br>
+          Not affiliated with or endorsed by the official HOODRAT team.<br>
+          View listings and collection activity through the official OpenSea link.
+        </footer>
+      </div>
+    </section>
+  </main>
+
+  <script src="/script.js"></script>
+</body>
+</html>

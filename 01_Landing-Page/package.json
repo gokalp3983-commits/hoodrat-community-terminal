@@ -1,0 +1,16 @@
+{
+  "name": "hoodrat-landing-page",
+  "version": "1.4.3",
+  "private": true,
+  "description": "HOODRAT Community Terminal landing page with accurate module lifecycle statuses.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}

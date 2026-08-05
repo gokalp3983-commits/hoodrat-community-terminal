@@ -1,0 +1,91 @@
+
+/* Eligibility Archive module only. Shared shell comes from style.css. */
+
+#terminal-application{
+  width:100%;
+  min-width:0;
+}
+
+.archive-terminal{
+  margin-top:0;
+}
+
+.archive-output{
+  min-height:255px;
+  color:var(--text);
+}
+
+.archive-line{
+  margin:4px 0;
+}
+
+.archive-line .ok{
+  color:var(--green);
+}
+
+.archive-line .ready{
+  color:var(--green);
+  font-weight:700;
+}
+
+.archive-line .cyan{
+  color:var(--cyan);
+}
+
+.archive-line .accent{
+  color:var(--yellow);
+}
+
+.archive-line .help{
+  color:var(--red);
+  font-weight:700;
+}
+
+.archive-line .soft{
+  color:var(--muted);
+}
+
+.archive-command-list{
+  white-space:pre;
+  font-variant-ligatures:none;
+}
+
+.cmdline{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-top:12px;
+  padding-top:10px;
+  border-top:1px solid var(--line);
+}
+
+.prompt-label{
+  color:var(--green);
+  white-space:nowrap;
+}
+
+.cmdinput{
+  flex:1;
+  min-width:0;
+  border:none;
+  outline:none;
+  background:transparent;
+  color:var(--text);
+  font:inherit;
+}
+
+
+#terminal-application .archive-terminal{
+  margin-top:12px;
+}
+
+#terminal-prompt{
+  padding:0 18px;
+}
+
+@media(max-width:560px){
+  #terminal-prompt{
+    padding-left:12px;
+    padding-right:12px;
+  }
+}
