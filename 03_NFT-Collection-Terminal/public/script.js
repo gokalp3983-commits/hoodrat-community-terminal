@@ -45,6 +45,10 @@ const elements = {
     document.getElementById("floorPrice"),
   floorTrend:
     document.getElementById("floorTrend"),
+  salesFloorPrice:
+    document.getElementById("salesFloorPrice"),
+  salesFloorTrend:
+    document.getElementById("salesFloorTrend"),
   totalVolume:
     document.getElementById("totalVolume"),
   collectionOwners:
@@ -332,6 +336,7 @@ function setCollectionUnavailable(requiresApiKey = false){
   elements.collectionDataStatus.classList.remove("live");
 
   elements.floorPrice.textContent = "—";
+  if(elements.salesFloorPrice) elements.salesFloorPrice.textContent = "—";
   renderFloorTrend(null);
   elements.totalVolume.textContent = "—";
   elements.collectionOwners.textContent = "—";
@@ -345,11 +350,13 @@ function setCollectionUnavailable(requiresApiKey = false){
       : "OpenSea marketplace data is temporarily unavailable.";
 }
 
-function renderFloorTrend(trend){
-  const element = elements.floorTrend;
+function renderFloorTrendElement(element, trend){
   if(!element) return;
 
-  element.className = "floor-trend";
+  const sidePanel = element.id === "salesFloorTrend";
+  element.className = sidePanel
+    ? "floor-trend sales-floor-trend"
+    : "floor-trend";
 
   if(!trend || trend.status === "unavailable"){
     element.classList.add("floor-trend-unavailable");
@@ -394,6 +401,11 @@ function renderFloorTrend(trend){
   element.textContent = `${arrow} ${sign}${change.toFixed(1)}% / 12H`;
 }
 
+function renderFloorTrend(trend){
+  renderFloorTrendElement(elements.floorTrend, trend);
+  renderFloorTrendElement(elements.salesFloorTrend, trend);
+}
+
 function renderCollectionStats(stats){
   if(!stats?.connected){
     setCollectionUnavailable(
@@ -406,8 +418,9 @@ function renderCollectionStats(stats){
   elements.collectionDataStatus.classList.add("live");
   elements.openSeaKeyNote.hidden = true;
 
-  elements.floorPrice.textContent =
-    stats.floorPriceDisplay || "UNAVAILABLE";
+  const floorDisplay = stats.floorPriceDisplay || "UNAVAILABLE";
+  elements.floorPrice.textContent = floorDisplay;
+  if(elements.salesFloorPrice) elements.salesFloorPrice.textContent = floorDisplay;
   renderFloorTrend(stats.floorTrend);
 
   elements.totalVolume.textContent =

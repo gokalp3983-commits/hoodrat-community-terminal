@@ -1649,6 +1649,42 @@ a:hover,a:focus-visible{
   }
 }
 
+
+/* Prominent floor summary inside the always-on NFT Sales Tracker */
+.sales-floor-summary{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:8px 10px;
+  margin:0 0 14px;
+  padding:11px 12px;
+  border:1px solid rgba(255,153,0,.42);
+  background:rgba(255,125,0,.055);
+  box-shadow:inset 0 0 12px rgba(255,125,0,.035);
+}
+.sales-floor-label{
+  color:var(--muted);
+  font-size:.72em;
+  letter-spacing:.09em;
+}
+.sales-floor-price{
+  color:#ff9d21;
+  font-size:1.34em;
+  line-height:1;
+  font-weight:800;
+  text-shadow:0 0 9px rgba(255,157,33,.28);
+  white-space:nowrap;
+}
+.sales-floor-trend{
+  flex-basis:100%;
+  width:max-content;
+  max-width:100%;
+  margin-top:1px;
+}
+@media(max-width:560px){
+  .sales-floor-price{font-size:1.22em}
+}
+
 /* 12-hour OpenSea floor-price trend */
 .floor-trend{
   display:inline-flex;
