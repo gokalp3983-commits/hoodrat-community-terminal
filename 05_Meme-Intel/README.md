@@ -30,3 +30,8 @@ The `scan`, `pulse`, `pressure`, `fresh`, `holders`, `risk`, and `live` commands
 ## Initial cache safeguard
 
 The first transfer scan is intentionally bounded to 30 pages or 120 seconds. It publishes a usable partial 12h/24h intelligence cache instead of keeping the terminal blocked during prolonged Blockscout throttling. Later background refreshes replace it with newer data.
+
+
+## Responsiveness and status fixes
+
+Commands that may require network or processing time immediately display a `[ PROCESSING ]` notice and remove it when the result or error is printed. The cache-status endpoint uses the same string keys as the activity cache, so completed 12-hour and 24-hour reports correctly appear as `READY`.

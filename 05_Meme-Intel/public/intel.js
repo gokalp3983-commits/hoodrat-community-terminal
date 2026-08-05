@@ -10,6 +10,31 @@ const PROMPT = "hoodrat@intel:~$";
 let commandHistory = [];
 let historyIndex = 0;
 
+let loadingSequence = 0;
+
+function showCommandLoading(command) {
+  const messages = {
+    status: "Checking cache and background-worker status...",
+    scan: "Assembling market, holder and activity signals...",
+    pressure: "Calculating classified 12-hour buy/sell pressure...",
+    fresh: "Reviewing 24-hour newly observed buyer flow...",
+    holders: "Preparing holder distribution...",
+    risk: "Evaluating transparent concentration and liquidity metrics...",
+    pulse: "Combining current market and on-chain signals...",
+    live: "Loading recent notable classified activity..."
+  };
+  const message = messages[command];
+  if (!message) return null;
+
+  const id = `command-loading-${++loadingSequence}`;
+  print(`<div id="${id}" class="intel-block command-loading" role="status" aria-live="polite"><div class="intel-title">[ PROCESSING ]</div><div class="intel-note">${esc(message)} Please wait...</div></div>`, "status-warning");
+  return document.getElementById(id);
+}
+
+function finishCommandLoading(node) {
+  if (node?.isConnected) node.remove();
+}
+
 const esc = (value) => String(value ?? "").replace(/[&<>"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
 const short = (a) => a ? `${a.slice(0, 6)}…${a.slice(-4)}` : "—";
 const num = (v) => Number(String(v ?? 0).replace(/[^0-9.-]/g, "")) || 0;
@@ -223,7 +248,7 @@ function cmdHelp(){
   print(`<div class="intel-block"><div class="intel-title">[ READY ] Command panel opened.</div><div class="intel-note">Click any command in the window on the right to place it into the prompt, or type a command manually.</div></div>`);
 }
 
-async function run(raw){ const cmd=raw.trim().toLowerCase(); if(!cmd)return; echo(raw); commandHistory.push(raw); historyIndex=commandHistory.length; input.disabled=true; try{ if(cmd==="help")cmdHelp(); else if(cmd==="status")await cmdStatus(); else if(cmd==="scan")await cmdScan(); else if(cmd==="pressure")await cmdPressure(); else if(cmd==="fresh")await cmdFresh(); else if(cmd==="holders")await cmdHolders(); else if(cmd==="risk")await cmdRisk(); else if(cmd==="pulse")await cmdPulse(); else if(cmd==="live")await cmdLive(); else if(cmd==="methodology")cmdMethodology(); else if(cmd==="clear")history.innerHTML=""; else print(`[ UNKNOWN COMMAND ] ${esc(raw)} — type help`,"status-error"); } finally { input.disabled=false; input.value=""; input.focus(); } }
+async function run(raw){ const cmd=raw.trim().toLowerCase(); if(!cmd)return; echo(raw); commandHistory.push(raw); historyIndex=commandHistory.length; input.disabled=true; const loadingNode=showCommandLoading(cmd); try{ if(cmd==="help")cmdHelp(); else if(cmd==="status")await cmdStatus(); else if(cmd==="scan")await cmdScan(); else if(cmd==="pressure")await cmdPressure(); else if(cmd==="fresh")await cmdFresh(); else if(cmd==="holders")await cmdHolders(); else if(cmd==="risk")await cmdRisk(); else if(cmd==="pulse")await cmdPulse(); else if(cmd==="live")await cmdLive(); else if(cmd==="methodology")cmdMethodology(); else if(cmd==="clear")history.innerHTML=""; else print(`[ UNKNOWN COMMAND ] ${esc(raw)} — type help`,"status-error"); } finally { finishCommandLoading(loadingNode); input.disabled=false; input.value=""; input.focus(); } }
 
 input.addEventListener("keydown",e=>{ if(e.key==="Enter"){run(input.value);} else if(e.key==="ArrowUp"){e.preventDefault(); if(historyIndex>0)input.value=commandHistory[--historyIndex]||"";} else if(e.key==="ArrowDown"){e.preventDefault(); if(historyIndex<commandHistory.length-1)input.value=commandHistory[++historyIndex]||""; else {historyIndex=commandHistory.length; input.value="";}}});
 commandPanel.hidden = true;

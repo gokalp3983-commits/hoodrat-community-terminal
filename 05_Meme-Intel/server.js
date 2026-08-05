@@ -1447,10 +1447,10 @@ app.get("/api/cache-status", (_req, res) => {
   const state = (ready, building) => ready ? "READY" : building ? "BUILDING" : "EMPTY";
   res.json({
     activity12: {
-      state: state(activityCache.has(12), activityRefreshes.has(12) || Boolean(activityRefreshAllPromise)),
+      state: state(activityCache.has("12"), activityRefreshes.has("12") || Boolean(activityRefreshAllPromise)),
     },
     activity24: {
-      state: state(activityCache.has(24), activityRefreshes.has(24) || Boolean(activityRefreshAllPromise)),
+      state: state(activityCache.has("24"), activityRefreshes.has("24") || Boolean(activityRefreshAllPromise)),
     },
     holders: {
       state: state(Boolean(topHolderCache || fullHolderCache), Boolean(topHolderRefresh || fullHolderRefresh)),
