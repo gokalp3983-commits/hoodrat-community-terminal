@@ -46,6 +46,15 @@ input{
   padding:22px 20px 18px
 }
 
+.module-title {
+	text-align: center;
+	color: var(--green);
+	font-size: 1.15rem;
+	font-weight: 600;
+	margin: 14px 0 12px;
+	letter-spacing: 0.5.px;
+}
+
 .header{
   text-align:center
 }

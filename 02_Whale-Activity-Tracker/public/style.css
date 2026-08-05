@@ -39,6 +39,15 @@ input{
   margin:12px auto
 }
 
+.module-title {
+	text-align: center;
+	color: var(--green);
+	font-size: 1.15rem;
+	font-weight: 600;
+	margin: 14px 0 12px;
+	letter-spacing: 0.5.px;
+}
+
 .terminal{
   min-height:calc(100vh - 24px);
   border:1px solid var(--line);
