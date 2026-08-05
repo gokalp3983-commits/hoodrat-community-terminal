@@ -4,6 +4,8 @@ const input = document.getElementById("commandInput");
 const history = document.getElementById("history");
 const boot = document.getElementById("boot");
 const commandPanel = document.getElementById("commandPanel");
+const appLayout = document.getElementById("appLayout");
+const promptRow = document.getElementById("promptRow");
 const PROMPT = "hoodrat@intel:~$";
 let commandHistory = [];
 let historyIndex = 0;
@@ -156,12 +158,55 @@ async function cmdLive() {
 }
 
 function cmdMethodology(){ block("METHODOLOGY", [["scan","Market + holder + pressure summary"],["pressure","Classified DEX buy/sell transfers"],["fresh","Unranked/newly observed buyers; not wallet age"],["holders","Current distribution plus snapshot movement"],["risk","Rule-based concentration/liquidity/distribution flags"],["pulse","Deterministic synthesis; no AI prediction"]], "Data can be delayed, cached, incomplete or rate-limited. Never treat a terminal label as a recommendation."); }
-function cmdHelp(){ block("COMMAND GUIDE", [["scan","Complete intelligence snapshot"],["pulse","Compact market-state interpretation"],["pressure","12h buy/sell pressure"],["fresh","24h newly observed buyer flow"],["holders","Distribution and holder movement"],["risk","Transparent risk metrics"],["live","Recent notable activity"],["methodology","Rules, definitions and limitations"],["clear","Clear output"]]); }
+function revealCommandPanel(){
+  if(!appLayout || !commandPanel || commandPanel.classList.contains("visible")) return;
+  appLayout.closest(".shell")?.classList.add("panel-open");
+  appLayout.classList.add("commands-visible");
+  commandPanel.hidden = false;
+  document.body.classList.add("command-panel-open");
+  commandPanel.classList.add("visible");
+  commandPanel.setAttribute("aria-hidden", "false");
+}
+
+function commandRoot(command){
+  return String(command || "").trim().split(/\s+/)[0].toLowerCase();
+}
+
+function highlightActiveCommand(command){
+  const root = commandRoot(command);
+  commandPanel?.querySelectorAll("button[data-command]").forEach((button) => {
+    button.classList.toggle("active", commandRoot(button.dataset.command || "") === root);
+  });
+}
+
+function placeCommandInPrompt(command){
+  promptRow.classList.add("visible");
+  input.disabled = false;
+  input.value = String(command || "");
+  input.focus();
+  const end = input.value.length;
+  input.setSelectionRange?.(end, end);
+}
+
+function cmdHelp(){
+  revealCommandPanel();
+  print(`<div class="intel-block"><div class="intel-title">[ READY ] Command panel opened.</div><div class="intel-note">Click any command in the window on the right to place it into the prompt, or type a command manually.</div></div>`);
+}
 
 async function run(raw){ const cmd=raw.trim().toLowerCase(); if(!cmd)return; echo(raw); commandHistory.push(raw); historyIndex=commandHistory.length; input.disabled=true; try{ if(cmd==="help")cmdHelp(); else if(cmd==="scan")await cmdScan(); else if(cmd==="pressure")await cmdPressure(); else if(cmd==="fresh")await cmdFresh(); else if(cmd==="holders")await cmdHolders(); else if(cmd==="risk")await cmdRisk(); else if(cmd==="pulse")await cmdPulse(); else if(cmd==="live")await cmdLive(); else if(cmd==="methodology")cmdMethodology(); else if(cmd==="clear")history.innerHTML=""; else print(`[ UNKNOWN COMMAND ] ${esc(raw)} — type help`,"status-error"); } finally { input.disabled=false; input.value=""; input.focus(); } }
 
 input.addEventListener("keydown",e=>{ if(e.key==="Enter"){run(input.value);} else if(e.key==="ArrowUp"){e.preventDefault(); if(historyIndex>0)input.value=commandHistory[--historyIndex]||"";} else if(e.key==="ArrowDown"){e.preventDefault(); if(historyIndex<commandHistory.length-1)input.value=commandHistory[++historyIndex]||""; else {historyIndex=commandHistory.length; input.value="";}}});
-document.querySelectorAll("[data-command]").forEach(b=>b.addEventListener("click",()=>{input.value=b.dataset.command;input.focus();}));
+commandPanel.hidden = true;
+document.body.classList.remove("command-panel-open");
+commandPanel.addEventListener("click", (event) => {
+  const button = event.target.closest("button[data-command]");
+  if(!button) return;
+  event.preventDefault();
+  event.stopPropagation();
+  const command = button.dataset.command || "";
+  placeCommandInPrompt(command);
+  highlightActiveCommand(command);
+});
 
 boot.innerHTML=`<div class="boot-line">[ SYSTEM ] HOODRAT Meme Intelligence Terminal ver 1.0</div><div class="boot-line">[ READY ] Type <strong>help</strong> to inspect available intelligence commands.</div>`;
 promptRow.classList.add("visible");
