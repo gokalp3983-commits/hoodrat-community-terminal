@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>
+  <div class="nft-terminal-workspace">
   <main id="terminal-frame" class="shell terminal-frame">
     <section class="terminal" aria-label="HOODRAT NFT Collection Terminal">
       <div id="terminal-header" class="terminal-area terminal-header">
@@ -220,25 +221,6 @@
       </section>
 
 
-      <section class="nft-sales-panel" aria-labelledby="nftSalesTitle">
-        <div class="dashboard-header">
-          <h3 id="nftSalesTitle">NFT Sales Tracker</h3>
-          <div class="collection-status-wrap">
-            <span id="nftSalesStatus" class="data-status">CONNECTING</span>
-            <span id="nftSalesUpdated" class="collection-updated">Updated —</span>
-          </div>
-        </div>
-
-        <p class="sales-intro">
-          Recent HOODRATS NFT sales from OpenSea. This feed loads automatically and refreshes in the background.
-        </p>
-
-        <div id="nftSalesRows" class="nft-sales-list" aria-live="polite">
-          <div class="nft-sale-placeholder">Loading recent OpenSea sales...</div>
-        </div>
-      </section>
-
-
       <section class="nft-whales-panel">
         <div class="dashboard-header">
           <h3>NFT Whale Analytics</h3>
@@ -385,6 +367,29 @@
       </div>
     </section>
   </main>
+
+  <aside class="nft-sales-window" aria-label="Live HOODRATS NFT sales">
+    <section class="nft-sales-panel" aria-labelledby="nftSalesTitle">
+        <div class="dashboard-header">
+          <h3 id="nftSalesTitle">NFT Sales Tracker</h3>
+          <div class="collection-status-wrap">
+            <span id="nftSalesStatus" class="data-status">CONNECTING</span>
+            <span id="nftSalesUpdated" class="collection-updated">Updated —</span>
+          </div>
+        </div>
+
+        <p class="sales-intro">
+          Recent HOODRATS NFT sales from OpenSea. This feed loads automatically and refreshes in the background.
+        </p>
+
+        <div id="nftSalesRows" class="nft-sales-list" aria-live="polite">
+          <div class="nft-sale-placeholder">Loading recent OpenSea sales...</div>
+        </div>
+    </section>
+
+
+  </aside>
+  </div>
 
   <script src="/script.js"></script>
 </body>

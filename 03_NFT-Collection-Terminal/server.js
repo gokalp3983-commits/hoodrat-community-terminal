@@ -856,6 +856,10 @@ function normalizeOpenSeaSale(event) {
         ? "Price unavailable"
         : `${formatEthValue(payment.amount)} ${payment.symbol || "ETH"}`,
     paymentSymbol: payment.symbol || null,
+    isLargeSale:
+      payment.amount != null &&
+      Number(payment.amount) > 0.5 &&
+      ["ETH", "WETH"].includes(String(payment.symbol || "ETH").toUpperCase()),
     buyer: normalizeOpenSeaAddress(event?.buyer ?? event?.to_account),
     seller: normalizeOpenSeaAddress(event?.seller ?? event?.from_account),
     transactionHash: txHash,

@@ -473,6 +473,16 @@ function renderNftSales(data){
       const article = document.createElement("article");
       article.className = "nft-sale-row";
 
+      const paymentSymbol = String(sale.paymentSymbol || "ETH").toUpperCase();
+      const isLargeSale =
+        sale.isLargeSale === true ||
+        (["ETH", "WETH"].includes(paymentSymbol) && Number(sale.price) > 0.5);
+
+      if(isLargeSale){
+        article.classList.add("nft-sale-row--large");
+        article.setAttribute("aria-label", "High-value NFT sale above 0.5 ETH");
+      }
+
       const header = document.createElement("div");
       header.className = "nft-sale-header";
 
@@ -490,6 +500,13 @@ function renderNftSales(data){
 
       header.append(token, price, time);
       article.appendChild(header);
+
+      if(isLargeSale){
+        const badge = document.createElement("div");
+        badge.className = "nft-sale-large-badge";
+        badge.textContent = "◆ HIGH-VALUE SALE · ABOVE 0.5 ETH";
+        article.appendChild(badge);
+      }
       article.appendChild(createSaleText("Buyer", shortSaleAddress(sale.buyer)));
       article.appendChild(createSaleText("Seller", shortSaleAddress(sale.seller)));
 

@@ -1493,6 +1493,65 @@ a:hover,a:focus-visible{
   padding:10px 0;
 }
 
+
+/* High-value NFT sale emphasis: strictly above 0.5 ETH/WETH */
+.nft-sale-row--large{
+  position:relative;
+  border-color:rgba(255,213,74,.92);
+  background:
+    linear-gradient(90deg,rgba(255,213,74,.12),rgba(57,255,20,.035) 55%,rgba(255,213,74,.08));
+  box-shadow:
+    0 0 0 1px rgba(255,213,74,.22) inset,
+    0 0 14px rgba(255,213,74,.18);
+  animation:nft-large-sale-pulse 2.2s ease-in-out infinite;
+}
+
+.nft-sale-row--large::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.10) 50%,transparent 65%);
+  transform:translateX(-130%);
+  animation:nft-large-sale-sweep 3.4s ease-in-out infinite;
+}
+
+.nft-sale-row--large .nft-sale-price{
+  color:var(--yellow);
+  text-shadow:0 0 9px rgba(255,213,74,.55);
+}
+
+.nft-sale-large-badge{
+  margin:-1px 0 7px;
+  color:var(--yellow);
+  font-size:.72em;
+  font-weight:700;
+  letter-spacing:.065em;
+  text-shadow:0 0 8px rgba(255,213,74,.45);
+}
+
+@keyframes nft-large-sale-pulse{
+  0%,100%{
+    box-shadow:0 0 0 1px rgba(255,213,74,.22) inset,0 0 8px rgba(255,213,74,.12);
+  }
+  50%{
+    box-shadow:0 0 0 1px rgba(255,213,74,.42) inset,0 0 20px rgba(255,213,74,.34);
+  }
+}
+
+@keyframes nft-large-sale-sweep{
+  0%,55%{ transform:translateX(-130%); opacity:0; }
+  65%{ opacity:1; }
+  85%,100%{ transform:translateX(130%); opacity:0; }
+}
+
+@media(prefers-reduced-motion:reduce){
+  .nft-sale-row--large,
+  .nft-sale-row--large::before{
+    animation:none;
+  }
+}
+
 #nftSalesStatus.stale{ color:var(--orange); }
 #nftSalesStatus.error{ color:var(--red); }
 
@@ -1505,5 +1564,87 @@ a:hover,a:focus-visible{
   }
   .nft-sales-list{
     max-height:520px;
+  }
+}
+
+/* Separate always-on NFT Sales Tracker window */
+.nft-terminal-workspace{
+  width:min(1510px,calc(100% - 24px));
+  margin:12px auto;
+  display:grid;
+  grid-template-columns:minmax(0,1100px) minmax(310px,390px);
+  gap:14px;
+  align-items:start;
+}
+
+.nft-terminal-workspace #terminal-frame.shell.terminal-frame{
+  width:100% !important;
+  margin:0 !important;
+}
+
+.nft-sales-window{
+  position:sticky;
+  top:12px;
+  min-width:0;
+  border:1px solid var(--green);
+  background:var(--bg);
+  box-shadow:0 0 18px rgba(57,255,20,.08);
+}
+
+.nft-sales-window::before{
+  content:"HOODRAT NFT COLLECTION TERMINAL";
+  display:block;
+  padding:9px 12px;
+  border-bottom:1px solid rgba(57,255,20,.35);
+  color:var(--green);
+  font-size:.78em;
+  letter-spacing:.08em;
+}
+
+.nft-sales-window .nft-sales-panel{
+  margin:0;
+  border:0;
+  background:transparent;
+  padding:14px;
+}
+
+.nft-sales-window .dashboard-header{
+  align-items:flex-start;
+  gap:10px;
+}
+
+.nft-sales-window .dashboard-header h3{
+  color:var(--yellow);
+  font-size:1em;
+}
+
+.nft-sales-window .collection-status-wrap{
+  text-align:right;
+}
+
+.nft-sales-window .nft-sales-list{
+  max-height:calc(100vh - 190px);
+  min-height:260px;
+}
+
+@media(max-width:1220px){
+  .nft-terminal-workspace{
+    width:min(1100px,calc(100% - 24px));
+    grid-template-columns:1fr;
+  }
+  .nft-sales-window{
+    position:static;
+  }
+  .nft-sales-window .nft-sales-list{
+    max-height:520px;
+    min-height:0;
+  }
+}
+
+@media(max-width:560px){
+  .nft-terminal-workspace{
+    width:calc(100% - 2px);
+    margin:1px auto;
+    gap:8px;
   }
 }
