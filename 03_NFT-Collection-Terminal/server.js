@@ -1,6 +1,7 @@
 "use strict";
 const express = require("express");
 const path = require("path");
+const fs = require("fs");
 
 const app = express();
 const port = Number(process.env.PORT || 3000);
@@ -548,8 +549,121 @@ const OPENSEA_COLLECTION_SLUG = "hoodrats-nft";
 const OPENSEA_API_KEY =
   String(process.env.OPENSEA_API_KEY || "").trim();
 const OPENSEA_STATS_CACHE_TTL_MS = 60 * 1000;
+const FLOOR_TREND_WINDOW_MS = 12 * 60 * 60 * 1000;
+const FLOOR_SNAPSHOT_MIN_INTERVAL_MS = 30 * 60 * 1000;
+const FLOOR_HISTORY_RETENTION_MS = 7 * 24 * 60 * 60 * 1000;
+const FLOOR_SURGE_THRESHOLD_PERCENT = 25;
+const FLOOR_HISTORY_FILE =
+  process.env.FLOOR_HISTORY_FILE ||
+  path.join(__dirname, "data", "floor-history.json");
 
 let openSeaStatsCache = null;
+let floorHistory = [];
+
+function loadFloorHistory() {
+  try {
+    if (!fs.existsSync(FLOOR_HISTORY_FILE)) return;
+    const parsed = JSON.parse(fs.readFileSync(FLOOR_HISTORY_FILE, "utf8"));
+    if (!Array.isArray(parsed)) return;
+    floorHistory = parsed.filter((entry) =>
+      Number.isFinite(Number(entry?.floorPriceEth)) &&
+      Number.isFinite(Number(entry?.timestamp))
+    );
+  } catch (error) {
+    console.warn("[floor-trend] unable to read history:", error.message);
+  }
+}
+
+function saveFloorHistory() {
+  try {
+    fs.mkdirSync(path.dirname(FLOOR_HISTORY_FILE), { recursive: true });
+    fs.writeFileSync(
+      FLOOR_HISTORY_FILE,
+      JSON.stringify(floorHistory, null, 2),
+      "utf8"
+    );
+  } catch (error) {
+    console.warn("[floor-trend] unable to persist history:", error.message);
+  }
+}
+
+function recordFloorSnapshot(floorPriceEth, timestamp = Date.now()) {
+  const floor = Number(floorPriceEth);
+  if (!Number.isFinite(floor) || floor <= 0) return;
+
+  const cutoff = timestamp - FLOOR_HISTORY_RETENTION_MS;
+  floorHistory = floorHistory.filter((entry) => entry.timestamp >= cutoff);
+
+  const latest = floorHistory.at(-1);
+  if (
+    latest &&
+    timestamp - latest.timestamp < FLOOR_SNAPSHOT_MIN_INTERVAL_MS
+  ) {
+    return;
+  }
+
+  floorHistory.push({ timestamp, floorPriceEth: floor });
+  saveFloorHistory();
+}
+
+function getFloorTrend(currentFloorEth, now = Date.now()) {
+  const current = Number(currentFloorEth);
+  if (!Number.isFinite(current) || current <= 0) {
+    return {
+      status: "unavailable",
+      direction: "neutral",
+      percentChange: null,
+      baselineFloorEth: null,
+      baselineAt: null,
+      signal: null,
+      thresholdPercent: FLOOR_SURGE_THRESHOLD_PERCENT,
+    };
+  }
+
+  const target = now - FLOOR_TREND_WINDOW_MS;
+  const candidates = floorHistory.filter((entry) => entry.timestamp <= target);
+  const baseline = candidates.at(-1);
+
+  if (!baseline) {
+    const first = floorHistory[0] || null;
+    const elapsedMs = first ? now - first.timestamp : 0;
+    return {
+      status: "building",
+      direction: "neutral",
+      percentChange: null,
+      baselineFloorEth: first?.floorPriceEth ?? null,
+      baselineAt: first ? new Date(first.timestamp).toISOString() : null,
+      hoursRemaining: Math.max(
+        0,
+        Math.ceil((FLOOR_TREND_WINDOW_MS - elapsedMs) / 3_600_000)
+      ),
+      signal: null,
+      thresholdPercent: FLOOR_SURGE_THRESHOLD_PERCENT,
+    };
+  }
+
+  const percentChange =
+    ((current - baseline.floorPriceEth) / baseline.floorPriceEth) * 100;
+  const direction = percentChange > 0 ? "up" : percentChange < 0 ? "down" : "neutral";
+  const signal =
+    percentChange >= FLOOR_SURGE_THRESHOLD_PERCENT
+      ? "surge"
+      : percentChange <= -FLOOR_SURGE_THRESHOLD_PERCENT
+        ? "drop"
+        : null;
+
+  return {
+    status: "ready",
+    direction,
+    percentChange,
+    baselineFloorEth: baseline.floorPriceEth,
+    baselineAt: new Date(baseline.timestamp).toISOString(),
+    signal,
+    thresholdPercent: FLOOR_SURGE_THRESHOLD_PERCENT,
+  };
+}
+
+loadFloorHistory();
 let openSeaStatsPromise = null;
 
 function formatEthValue(value) {
@@ -587,6 +701,8 @@ async function loadOpenSeaCollectionStats() {
       connected: false,
       requiresApiKey: true,
       floorPriceEth: null,
+      floorTrend: getFloorTrend(null),
+      floorTrend: getFloorTrend(null),
       totalVolumeEth: null,
       sales: null,
       owners: null,
@@ -650,10 +766,15 @@ async function loadOpenSeaCollectionStats() {
     total?.listed
   );
 
+  const snapshotTime = Date.now();
+  recordFloorSnapshot(floorPriceEth, snapshotTime);
+  const floorTrend = getFloorTrend(floorPriceEth, snapshotTime);
+
   return {
     connected: true,
     requiresApiKey: false,
     floorPriceEth,
+    floorTrend,
     floorPriceDisplay:
       floorPriceEth == null
         ? "UNAVAILABLE"

@@ -43,6 +43,8 @@ const elements = {
     document.getElementById("collectionDataStatus"),
   floorPrice:
     document.getElementById("floorPrice"),
+  floorTrend:
+    document.getElementById("floorTrend"),
   totalVolume:
     document.getElementById("totalVolume"),
   collectionOwners:
@@ -330,6 +332,7 @@ function setCollectionUnavailable(requiresApiKey = false){
   elements.collectionDataStatus.classList.remove("live");
 
   elements.floorPrice.textContent = "—";
+  renderFloorTrend(null);
   elements.totalVolume.textContent = "—";
   elements.collectionOwners.textContent = "—";
   elements.collectionSales.textContent = "—";
@@ -340,6 +343,55 @@ function setCollectionUnavailable(requiresApiKey = false){
     requiresApiKey
       ? "Waiting for OpenSea marketplace data."
       : "OpenSea marketplace data is temporarily unavailable.";
+}
+
+function renderFloorTrend(trend){
+  const element = elements.floorTrend;
+  if(!element) return;
+
+  element.className = "floor-trend";
+
+  if(!trend || trend.status === "unavailable"){
+    element.classList.add("floor-trend-unavailable");
+    element.textContent = "● 12H TREND UNAVAILABLE";
+    return;
+  }
+
+  if(trend.status === "building"){
+    element.classList.add("floor-trend-building");
+    const remaining = Number(trend.hoursRemaining);
+    element.textContent = Number.isFinite(remaining) && remaining > 0
+      ? `● BUILDING 12H BASELINE · ~${remaining}H LEFT`
+      : "● BUILDING 12H BASELINE";
+    return;
+  }
+
+  const change = Number(trend.percentChange);
+  if(!Number.isFinite(change)){
+    element.classList.add("floor-trend-unavailable");
+    element.textContent = "● 12H TREND UNAVAILABLE";
+    return;
+  }
+
+  const sign = change > 0 ? "+" : "";
+  const arrow = change > 0 ? "▲" : change < 0 ? "▼" : "●";
+
+  if(trend.signal === "surge"){
+    element.classList.add("floor-trend-surge");
+    element.textContent = `${arrow} FLOOR SURGE · ${sign}${change.toFixed(1)}% / 12H`;
+    return;
+  }
+
+  if(trend.signal === "drop"){
+    element.classList.add("floor-trend-drop");
+    element.textContent = `${arrow} FLOOR DROP · ${sign}${change.toFixed(1)}% / 12H`;
+    return;
+  }
+
+  element.classList.add(
+    change > 0 ? "floor-trend-up" : change < 0 ? "floor-trend-down" : "floor-trend-flat"
+  );
+  element.textContent = `${arrow} ${sign}${change.toFixed(1)}% / 12H`;
 }
 
 function renderCollectionStats(stats){
@@ -356,6 +408,7 @@ function renderCollectionStats(stats){
 
   elements.floorPrice.textContent =
     stats.floorPriceDisplay || "UNAVAILABLE";
+  renderFloorTrend(stats.floorTrend);
 
   elements.totalVolume.textContent =
     stats.totalVolumeDisplay || "UNAVAILABLE";

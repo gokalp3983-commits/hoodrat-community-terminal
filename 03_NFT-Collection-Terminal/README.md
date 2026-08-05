@@ -153,3 +153,15 @@ OpenSea, mint statistics, whale analytics, wallet lookup, and existing API logic
 ## NFT Sales Tracker
 
 The NFT terminal includes an always-visible, text-only OpenSea sales feed. Sales strictly above 0.5 ETH (or WETH) receive an animated high-value highlight and badge; reduced-motion browser preferences disable the animation. The server polls the OpenSea collection events endpoint every 90 seconds, caches the latest sales, and exposes them through `/api/nft-sales`. The browser refreshes the panel every 60 seconds and retains the last successful feed if OpenSea is temporarily unavailable. The existing `OPENSEA_API_KEY` Render environment variable is required.
+
+## 12-hour floor trend
+
+The OpenSea floor-price card records lightweight snapshots and compares the current floor with the latest snapshot that is at least 12 hours old. It displays an up/down indicator and highlights moves of 25% or more. The first comparison becomes available after a 12-hour baseline has been collected.
+
+By default, snapshots are stored at `data/floor-history.json`. Render's normal filesystem is ephemeral, so for a baseline that survives redeploys/restarts, attach a small Render persistent disk and set:
+
+```text
+FLOOR_HISTORY_FILE=/var/data/floor-history.json
+```
+
+If no persistent disk is configured, the indicator still works while the current Render instance remains alive, but its baseline restarts after a redeploy or cold replacement.
