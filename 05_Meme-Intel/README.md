@@ -20,3 +20,8 @@ A separate intelligence module for the HOODRAT Community Terminal. It complement
 - Start Command: `npm start`
 
 No wallet connection, transaction signing, private key, or financial recommendation is involved.
+
+
+## Cache warm-up
+
+The `scan`, `pulse`, `pressure`, `fresh`, `holders`, `risk`, and `live` commands depend on a background intelligence cache. After a cold Render start, the service fetches multiple Blockscout holder and transfer pages, classifies addresses and DEX activity, and deliberately spaces requests to reduce HTTP 429 rate-limit errors. The first complete cache may therefore take a few minutes. Use the `status` command to see whether each data source is `READY`, `BUILDING`, or `EMPTY`.

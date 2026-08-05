@@ -1394,6 +1394,30 @@ async function whalePayload(limit = 100) {
 }
 
 
+
+app.get("/api/cache-status", (_req, res) => {
+  const state = (ready, building) => ready ? "READY" : building ? "BUILDING" : "EMPTY";
+  res.json({
+    activity12: {
+      state: state(activityCache.has(12), activityRefreshes.has(12) || Boolean(activityRefreshAllPromise)),
+    },
+    activity24: {
+      state: state(activityCache.has(24), activityRefreshes.has(24) || Boolean(activityRefreshAllPromise)),
+    },
+    holders: {
+      state: state(Boolean(topHolderCache || fullHolderCache), Boolean(topHolderRefresh || fullHolderRefresh)),
+    },
+    transfers: {
+      state: state(Boolean(transferCache), Boolean(transferRefresh)),
+    },
+    market: {
+      state: state(Boolean(marketCache), Boolean(marketRefresh)),
+    },
+    backgroundWorker: activityBackgroundStarted,
+    checkedAt: new Date().toISOString(),
+  });
+});
+
 app.get("/api/activity", async (req, res) => {
   try {
     res.json(await getActivityPayload(req.query.hours));
@@ -1401,7 +1425,7 @@ app.get("/api/activity", async (req, res) => {
     if (error?.code === "ACTIVITY_CACHE_WARMING") {
       return res.status(503).json({
         error:
-          "On-chain whale activity cache is warming up. Please try again shortly.",
+          "Intelligence cache is building in the background. This can take a few minutes after a cold start because holder and transfer pages are fetched and classified with rate-limit protection.",
         warming: true,
         hours: Number(req.query.hours) || 24,
       });
@@ -1655,7 +1679,7 @@ app.listen(PORT, () => {
 
 startActivityBackgroundRefresh();
   console.log("");
-  console.log("🐋 HOODRAT Whale Activity Tracker");
+  console.log("🧠 HOODRAT Meme Intelligence Terminal");
   console.log("--------------------------------");
   console.log(`Local:   http://localhost:${PORT}`);
   console.log(`Ready on port ${PORT}`);

@@ -34,7 +34,13 @@ async function api(url) {
   return data;
 }
 async function activity(hours = 12) { return api(`/api/activity?hours=${hours}`); }
-function warming(error) { print(error.warming ? "[ CACHE ] Intelligence data is warming up. Run the command again shortly." : `[ ERROR ] ${esc(error.message)}`, error.warming ? "status-warning" : "status-error"); }
+function warming(error) {
+  if (error.warming) {
+    print(`<div class="intel-block"><div class="intel-title">[ CACHE BUILDING ]</div><div class="intel-note">The intelligence cache is being assembled in the background. The terminal must fetch and classify multiple pages of holder and transfer data while pacing requests to avoid Blockscout rate limits. A cold Render start can therefore take a few minutes. Use <strong>status</strong> to check progress, then retry the command when the cache is READY.</div></div>`, "status-warning");
+    return;
+  }
+  print(`[ ERROR ] ${esc(error.message)}`, "status-error");
+}
 
 async function marketHeader() {
   try {
@@ -48,6 +54,23 @@ async function marketHeader() {
     ["marketPriceStatus","marketCapStatus","marketHoldersStatus","marketVolumeStatus","marketUpdatedStatus"].forEach(id => set(id,"[ LIVE ]"));
   } catch {
     ["marketPriceStatus","marketCapStatus","marketHoldersStatus","marketVolumeStatus","marketUpdatedStatus"].forEach(id => document.getElementById(id).textContent="[ OFFLINE ]");
+  }
+}
+
+async function cmdStatus() {
+  try {
+    const s = await api("/api/cache-status");
+    const stateClass = (state) => state === "READY" ? "positive" : state === "BUILDING" ? "status-warning" : "negative";
+    block("INTELLIGENCE CACHE STATUS", [
+      ["12h activity", esc(s.activity12.state), stateClass(s.activity12.state)],
+      ["24h activity", esc(s.activity24.state), stateClass(s.activity24.state)],
+      ["Holder data", esc(s.holders.state), stateClass(s.holders.state)],
+      ["Transfer data", esc(s.transfers.state), stateClass(s.transfers.state)],
+      ["Market data", esc(s.market.state), stateClass(s.market.state)],
+      ["Background worker", s.backgroundWorker ? "RUNNING" : "STARTING", s.backgroundWorker ? "positive" : "status-warning"]
+    ], "READY means cached data is available. BUILDING means the background scan is still fetching and classifying on-chain data. EMPTY means that source has not completed its first successful load yet.");
+  } catch (e) {
+    print(`[ ERROR ] Unable to read cache status: ${esc(e.message)}`, "status-error");
   }
 }
 
@@ -157,7 +180,7 @@ async function cmdLive() {
   } catch(e){ warming(e); }
 }
 
-function cmdMethodology(){ block("METHODOLOGY", [["scan","Market + holder + pressure summary"],["pressure","Classified DEX buy/sell transfers"],["fresh","Unranked/newly observed buyers; not wallet age"],["holders","Current distribution plus snapshot movement"],["risk","Rule-based concentration/liquidity/distribution flags"],["pulse","Deterministic synthesis; no AI prediction"]], "Data can be delayed, cached, incomplete or rate-limited. Never treat a terminal label as a recommendation."); }
+function cmdMethodology(){ block("METHODOLOGY", [["status","Cache build progress and readiness"],["scan","Market + holder + pressure summary"],["pressure","Classified DEX buy/sell transfers"],["fresh","Unranked/newly observed buyers; not wallet age"],["holders","Current distribution plus snapshot movement"],["risk","Rule-based concentration/liquidity/distribution flags"],["pulse","Deterministic synthesis; no AI prediction"]], "Data can be delayed, cached, incomplete or rate-limited. Never treat a terminal label as a recommendation."); }
 function revealCommandPanel(){
   if(!appLayout || !commandPanel || commandPanel.classList.contains("visible")) return;
   appLayout.closest(".shell")?.classList.add("panel-open");
@@ -193,7 +216,7 @@ function cmdHelp(){
   print(`<div class="intel-block"><div class="intel-title">[ READY ] Command panel opened.</div><div class="intel-note">Click any command in the window on the right to place it into the prompt, or type a command manually.</div></div>`);
 }
 
-async function run(raw){ const cmd=raw.trim().toLowerCase(); if(!cmd)return; echo(raw); commandHistory.push(raw); historyIndex=commandHistory.length; input.disabled=true; try{ if(cmd==="help")cmdHelp(); else if(cmd==="scan")await cmdScan(); else if(cmd==="pressure")await cmdPressure(); else if(cmd==="fresh")await cmdFresh(); else if(cmd==="holders")await cmdHolders(); else if(cmd==="risk")await cmdRisk(); else if(cmd==="pulse")await cmdPulse(); else if(cmd==="live")await cmdLive(); else if(cmd==="methodology")cmdMethodology(); else if(cmd==="clear")history.innerHTML=""; else print(`[ UNKNOWN COMMAND ] ${esc(raw)} — type help`,"status-error"); } finally { input.disabled=false; input.value=""; input.focus(); } }
+async function run(raw){ const cmd=raw.trim().toLowerCase(); if(!cmd)return; echo(raw); commandHistory.push(raw); historyIndex=commandHistory.length; input.disabled=true; try{ if(cmd==="help")cmdHelp(); else if(cmd==="status")await cmdStatus(); else if(cmd==="scan")await cmdScan(); else if(cmd==="pressure")await cmdPressure(); else if(cmd==="fresh")await cmdFresh(); else if(cmd==="holders")await cmdHolders(); else if(cmd==="risk")await cmdRisk(); else if(cmd==="pulse")await cmdPulse(); else if(cmd==="live")await cmdLive(); else if(cmd==="methodology")cmdMethodology(); else if(cmd==="clear")history.innerHTML=""; else print(`[ UNKNOWN COMMAND ] ${esc(raw)} — type help`,"status-error"); } finally { input.disabled=false; input.value=""; input.focus(); } }
 
 input.addEventListener("keydown",e=>{ if(e.key==="Enter"){run(input.value);} else if(e.key==="ArrowUp"){e.preventDefault(); if(historyIndex>0)input.value=commandHistory[--historyIndex]||"";} else if(e.key==="ArrowDown"){e.preventDefault(); if(historyIndex<commandHistory.length-1)input.value=commandHistory[++historyIndex]||""; else {historyIndex=commandHistory.length; input.value="";}}});
 commandPanel.hidden = true;
