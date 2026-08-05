@@ -5,7 +5,7 @@ const MODULES = {
   },
   whales: {
     title: "Whale Activity Tracker",
-    url: "https://whale-activity-tracker-xnj8.onrender.com/",
+    url: "https://nft-eligibility-checker-archive.onrender.com",
   },
   nft: {
     title: "HOODRATS NFT Collection Terminal",
