@@ -1422,6 +1422,11 @@ async function whalePayload(limit = 100) {
     },
     whales,
     stats: {
+      // Canonical field names consumed by the Meme Intel frontend.
+      top10Percentage: pct(sum(whales.slice(0, 10))),
+      top30Percentage: pct(sum(whales.slice(0, 30))),
+
+      // Legacy aliases retained so older clients do not break.
       top10ControlPct: pct(sum(whales.slice(0, 10))),
       top100ControlPct: pct(sum(whales.slice(0, 100))),
       largestHolder: whales[0] || null,
